@@ -15,8 +15,9 @@
     <defName>CF_Biome_Barren</defName>
     <label>barren cave</label>
     <description>Bare rock and stone. Nothing grows here.</description>
+    <constantOutdoorTemperature>-30</constantOutdoorTemperature>
     <modExtensions>
-      <li Class="CavesFramework.CaveBiome">
+      <li Class="CavesFramework.CaveBiomeExt">
         <!-- both shape lists left null == every shape allowed -->
         <selectionWeight>1</selectionWeight>
       </li>

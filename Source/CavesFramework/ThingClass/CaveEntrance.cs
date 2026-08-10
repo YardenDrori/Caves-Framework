@@ -11,7 +11,10 @@ public class CaveEntrance : MapPortal
     /// and take the map dimensions from it.
     protected override Map GeneratePocketMapInt()
     {
-        if (def.portal is not CavePortalProperties cavePortal || cavePortal.pocketMapBiomeDef == null)
+        if (
+            def.portal is not CavePortalProperties cavePortal
+            || cavePortal.pocketMapBiomeDef == null
+        )
         {
             Log.Error(
                 "CF config error: "
@@ -20,7 +23,7 @@ public class CaveEntrance : MapPortal
             );
             return null;
         }
-        CaveBiome pocketMapBiome = cavePortal.pocketMapBiomeDef.GetModExtension<CaveBiome>();
+        CaveBiomeExt pocketMapBiome = cavePortal.pocketMapBiomeDef.GetModExtension<CaveBiomeExt>();
         if (pocketMapBiome == null)
         {
             Log.Error(
@@ -91,11 +94,12 @@ public class CaveEntrance : MapPortal
             mapWidth = caveShapeParams.mapWidth;
         }
 
-        return PocketMapUtility.GeneratePocketMap(
+        return CaveMapUtility.GeneratePocketMap(
             new IntVec3(mapWidth, 1, mapHeight),
             chosenCaveShape,
             GetExtraGenSteps(),
-            base.Map
+            base.Map,
+            cavePortal.pocketMapBiomeDef
         );
     }
 }

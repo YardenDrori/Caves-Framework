@@ -4,7 +4,7 @@ using Verse;
 
 namespace CavesFramework;
 
-public class CaveBiome : DefModExtension
+public class CaveBiomeExt : DefModExtension
 {
     //if both are empty all maps types are allowed
     public List<MapGeneratorDef> whitelistedCaveShapes = null;

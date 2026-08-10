@@ -1,0 +1,51 @@
+<Defs>
+  <ThingDef ParentName="BuildingBase">
+    <defName>CF_CaveEntranceDemo</defName>
+    <label>EXAMPLE cave: regular</label>
+    <description>Mankind is dead. Blood is fuel. Hell is full.</description>
+    <size>(4,4)</size>
+    <useHitPoints>false</useHitPoints>
+    <thingClass>CavesFramework.CaveEntrance</thingClass>
+    <tickerType>Rare</tickerType>
+    <rotatable>false</rotatable>
+    <terrainAffordanceNeeded>Heavy</terrainAffordanceNeeded>
+    <canOverlapZones>false</canOverlapZones>
+    <graphicData>
+      <graphicClass>Graphic_Single</graphicClass>
+      <texPath>Things/Building/PitGate/PitGate</texPath>
+      <drawSize>(4,4)</drawSize>
+    </graphicData>
+    <altitudeLayer>FloorEmplacement</altitudeLayer>
+    <passability>Impassable</passability>
+    <holdsRoof>true</holdsRoof>
+    <destroyable>false</destroyable>
+    <building>
+      <isEdifice>true</isEdifice>
+      <deconstructible>false</deconstructible>
+      <isTargetable>false</isTargetable>
+      <isInert>true</isInert>
+      <claimable>false</claimable>
+      <expandHomeArea>false</expandHomeArea>
+    </building>
+    <portal Class="CavesFramework.CavePortalProperties">
+      <pocketMapBiomeDef>CF_Biome_Barren</pocketMapBiomeDef>
+      <exitDef>CaveExit</exitDef>
+      <enteredLetterLabel>Fleshbeast lair</enteredLetterLabel>
+      <enteredLetterText>In the depths of the pit gate, you have discovered a massive cavern system infested with fleshbeasts.\n\nThe cavern system is clogged with masses of living flesh that block your progress. Attack the fleshmass to destroy it.\n\nThe entire cavern system seems unstable. If you find what lies behind the fleshmass, you may be able to collapse the tunnels and close the pit gate.</enteredLetterText>
+      <enteredLetterDef>ThreatBig</enteredLetterDef>
+      <traverseSound>TraversePitGate</traverseSound>
+    </portal>
+    <statBases>
+      <Flammability>0</Flammability>
+    </statBases>
+    <inspectorTabs>
+      <li>ITab_ContentsMapPortal</li>
+    </inspectorTabs>
+    <comps>
+      <li Class="CompProperties_LeaveFilthOnDestroyed">
+        <filthDef>Filth_LooseGround</filthDef>
+        <thickness>5</thickness>
+      </li>
+    </comps>
+  </ThingDef>
+</Defs>

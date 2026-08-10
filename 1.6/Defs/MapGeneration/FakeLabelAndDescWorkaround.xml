@@ -1,0 +1,6 @@
+<Defs>
+  <MapGeneratorDef>
+    <defName>LabelAndDescFakeMapGen</defName>
+    <label>cavern</label>
+  </MapGeneratorDef>
+</Defs>

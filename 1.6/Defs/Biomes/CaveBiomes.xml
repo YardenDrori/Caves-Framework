@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Defs>
-
   <BiomeDef ParentName="Biome_Underground">
     <defName>CF_Biome_Test</defName>
     <label>test cave</label>
@@ -8,9 +7,14 @@
     <constantOutdoorTemperature>-69</constantOutdoorTemperature>
     <modExtensions>
       <li Class="CavesFramework.CaveBiomeExt">
-        <selectionWeight>1</selectionWeight>
+        <caveShapes>
+          <li>
+            <shape>CF_Shape_Long</shape>
+            <shapeWeight>1</shapeWeight>
+          </li>
+        </caveShapes>
+        <biomeWeight>1</biomeWeight>
       </li>
     </modExtensions>
   </BiomeDef>
-
 </Defs>

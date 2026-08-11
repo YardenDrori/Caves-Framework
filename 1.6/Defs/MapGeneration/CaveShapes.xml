@@ -2,20 +2,18 @@
 <Defs>
   <MapGeneratorDef Name="CF_CaveShapeBase" Abstract="True">
     <isUnderground>true</isUnderground>
-    <forceCaves>true</forceCaves>
+    <forceCaves>false</forceCaves>
     <ignoreAreaRevealedLetter>true</ignoreAreaRevealedLetter>
     <disableCallAid>true</disableCallAid>
     <customMapComponents>
       <li>CavesFramework.Comps.MapComps.CollapseCaveTimer</li>
     </customMapComponents>
-    <pocketMapProperties>
-      <biome>Underground</biome>
-      <temperature>15</temperature>
-      <tileMutators>
-        <!-- this is what actually carves the caves for now -->
-        <li>UndergroundCave</li>
-      </tileMutators>
-    </pocketMapProperties>
+    <!-- <pocketMapProperties> -->
+    <!--   <biome>Underground</biome> -->
+    <!--   <temperature>15</temperature> -->
+    <!--   <tileMutators> -->
+    <!--   </tileMutators> -->
+    <!-- </pocketMapProperties> -->
     <genSteps>
       <li>ElevationFertility</li>
       <li>MutatorPostElevationFertility</li>
@@ -39,7 +37,6 @@
       <li Class="CavesFramework.CaveShape">
         <mapWidth>50</mapWidth>
         <mapHeight>300</mapHeight>
-        <selectionWeight>1</selectionWeight>
       </li>
     </modExtensions>
   </MapGeneratorDef>

@@ -57,7 +57,7 @@ public class CaveEntrance : MapPortal
         }
 
         if (
-            !allowedCaveShapes.TryRandomElementByWeight<CaveShapeEntry>(
+            !allowedCaveShapes.TryRandomElementByWeight(
                 d => d.shapeWeight,
                 out CaveShapeEntry chosenCaveShape
             )

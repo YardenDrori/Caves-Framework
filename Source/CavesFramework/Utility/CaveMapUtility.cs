@@ -15,7 +15,8 @@ public static class CaveMapUtility
         IEnumerable<GenStepWithParams> extraGenStepDefs,
         Map sourceMap,
         BiomeDef biome,
-        List<GenStepOverride> overrides
+        List<GenStepOverride> overrides,
+        List<TileMutatorDef> mutators
     )
     {
         PocketMapParent pocketMapParent =
@@ -33,6 +34,16 @@ public static class CaveMapUtility
                 ///but we replace it with the biome's mod extension but we have to still provide a biome
                 ///in mapgeneratordef to avoid an NRE so we use change it to the actual biome as a callback
                 map.pocketTileInfo.PrimaryBiome = biome;
+
+                ///We do the same for mutators
+                if (mutators != null)
+                {
+                    foreach (TileMutatorDef i in mutators)
+                    {
+                        map.TileInfo.AddMutator(i);
+                        i.Worker?.Init(map);
+                    }
+                }
 
                 ///we save the overrides so we can read them from the genStep worker later as gensteps
                 ///are simpletons we cannot modify them directly without unfavourable behavior

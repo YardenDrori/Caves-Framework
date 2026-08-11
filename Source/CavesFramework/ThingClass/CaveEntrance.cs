@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using RimWorld;
 using Verse;
+using Verse.Noise;
 
 namespace CavesFramework;
 
@@ -46,6 +48,85 @@ public class CaveEntrance : MapPortal
         }
     }
 
+    private List<TileMutatorDef> GetActiveMutatorsForBiome(
+        CaveBiomeExt biomeExt,
+        CavePortalProperties cavePortal
+    )
+    {
+        List<TileMutatorDef> mutators = new();
+        if (!biomeExt.tileMutators.NullOrEmpty())
+        {
+            foreach (TileMutatorDef mutator in biomeExt.tileMutators)
+            {
+                if (mutator == null)
+                {
+                    Log.Error(
+                        "CF config error: biome "
+                            + cavePortal.pocketMapBiomeDef.defName
+                            + " lists a tileMutators entry that is missing or unresolved."
+                    );
+                    continue;
+                }
+                mutators.Add(mutator);
+            }
+        }
+        if (
+            biomeExt.optionalMutators.chanceForOptionalMutators > 0f
+            && biomeExt.optionalMutators.maxOptionalMutatorsActive > 0
+            && !biomeExt.optionalMutators.optionalMutators.NullOrEmpty()
+        )
+        {
+            int optMutatorCount = biomeExt.optionalMutators.maxOptionalMutatorsActive;
+            if (
+                biomeExt.optionalMutators.maxOptionalMutatorsActive
+                > biomeExt.optionalMutators.optionalMutators.Count
+            )
+            {
+                optMutatorCount = biomeExt.optionalMutators.optionalMutators.Count;
+            }
+            List<OptionalMutatorEntry> remainingMutators = new();
+            biomeExt.optionalMutators.optionalMutators.CopyToList(remainingMutators);
+            float currChance = biomeExt.optionalMutators.chanceForOptionalMutators;
+            for (int i = 0; i < optMutatorCount; i++)
+            {
+                if (Rand.Chance(currChance))
+                {
+                    if (
+                        !remainingMutators.TryRandomElementByWeight(
+                            d => d.mutatorWeight,
+                            out OptionalMutatorEntry chosenMutator
+                        )
+                    )
+                    {
+                        Log.Error(
+                            "CF config error: optional mutators for biome "
+                                + cavePortal.pocketMapBiomeDef.defName
+                                + " don't have weights assigned correctly."
+                        );
+                        break;
+                    }
+                    remainingMutators.Remove(chosenMutator);
+                    if (chosenMutator.mutator == null)
+                    {
+                        Log.Error(
+                            "CF config error: biome "
+                                + cavePortal.pocketMapBiomeDef.defName
+                                + " lists an optionalMutators entry with a missing or unresolved <mutator>."
+                        );
+                        continue;
+                    }
+                    mutators.Add(chosenMutator.mutator);
+                    currChance *= biomeExt.optionalMutators.additionalMutatorChanceMult;
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+        return mutators;
+    }
+
     /// Vanilla picks one hardcoded generator at a fixed square size. We instead
     /// roll a shape (a MapGeneratorDef carrying CaveShape) allowed by our biome,
     /// and take the map dimensions from it.
@@ -81,6 +162,10 @@ public class CaveEntrance : MapPortal
         {
             return null;
         }
+        if (
+            GetActiveMutatorsForBiome(pocketMapBiome, cavePortal)
+            is not List<TileMutatorDef> mutatorsToAdd
+        )
         {
             return null;
         }
@@ -116,7 +201,8 @@ public class CaveEntrance : MapPortal
             GetExtraGenSteps(),
             base.Map,
             cavePortal.pocketMapBiomeDef,
-            chosenCaveShape.genStepOverrides
+            chosenCaveShape.genStepOverrides,
+            mutatorsToAdd
         );
     }
 }

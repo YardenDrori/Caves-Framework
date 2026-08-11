@@ -6,6 +6,46 @@ namespace CavesFramework;
 
 public class CaveEntrance : MapPortal
 {
+    private List<CaveShapeEntry> GetAllowedCaveShapesForBiome(
+        CaveBiomeExt pocketMapBiome,
+        CavePortalProperties cavePortal
+    )
+    {
+        if (pocketMapBiome.caveShapes.NullOrEmpty())
+        {
+            Log.Error("CF config error: defined cave entrance with no cave shapes.");
+            return null;
+        }
+        else
+        {
+            //copy, so we never hand out (or later mutate) the def's own list
+            return pocketMapBiome.caveShapes.FindAll(d =>
+            {
+                if (d.shape == null)
+                {
+                    Log.Error(
+                        "CF config error: biome "
+                            + cavePortal.pocketMapBiomeDef.defName
+                            + " lists a caveShapes entry with a missing or unresolved <shape>."
+                    );
+                    return false;
+                }
+                if (!d.shape.HasModExtension<CaveShape>())
+                {
+                    Log.Error(
+                        "CF config error: biome "
+                            + cavePortal.pocketMapBiomeDef.defName
+                            + " lists cave shape "
+                            + d.shape.defName
+                            + ", which lacks the CaveShape modExtension."
+                    );
+                    return false;
+                }
+                return true;
+            });
+        }
+    }
+
     /// Vanilla picks one hardcoded generator at a fixed square size. We instead
     /// roll a shape (a MapGeneratorDef carrying CaveShape) allowed by our biome,
     /// and take the map dimensions from it.
@@ -33,27 +73,16 @@ public class CaveEntrance : MapPortal
             );
             return null;
         }
-        List<CaveShapeEntry> allowedCaveShapes;
-        if (pocketMapBiome.caveShapes.NullOrEmpty())
+
+        if (
+            GetAllowedCaveShapesForBiome(pocketMapBiome, cavePortal)
+            is not List<CaveShapeEntry> allowedCaveShapes
+        )
         {
-            Log.Error("CF config error: defined cave entrance with no cave shapes.");
             return null;
         }
-        else
         {
-            //copy, so we never hand out (or later mutate) the def's own list
-            allowedCaveShapes = pocketMapBiome.caveShapes.FindAll(d =>
-            {
-                if (d.shape.HasModExtension<CaveShape>())
-                {
-                    return true;
-                }
-                else
-                {
-                    Log.Error("CF config error: defined cave shape with no CaveShape modExtension");
-                    return false;
-                }
-            });
+            return null;
         }
 
         if (

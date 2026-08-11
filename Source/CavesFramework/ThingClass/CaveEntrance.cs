@@ -36,15 +36,24 @@ public class CaveEntrance : MapPortal
         List<CaveShapeEntry> allowedCaveShapes;
         if (pocketMapBiome.caveShapes.NullOrEmpty())
         {
-            Log.Error("CE config error: defined cave entrance with no cave shapes.");
+            Log.Error("CF config error: defined cave entrance with no cave shapes.");
             return null;
         }
         else
         {
             //copy, so we never hand out (or later mutate) the def's own list
             allowedCaveShapes = pocketMapBiome.caveShapes.FindAll(d =>
-                d.shape.HasModExtension<CaveShape>()
-            );
+            {
+                if (d.shape.HasModExtension<CaveShape>())
+                {
+                    return true;
+                }
+                else
+                {
+                    Log.Error("CF config error: defined cave shape with no CaveShape modExtension");
+                    return false;
+                }
+            });
         }
 
         if (
@@ -57,13 +66,7 @@ public class CaveEntrance : MapPortal
             Log.Error("CF: no valid cave shape for biome " + cavePortal.pocketMapBiomeDef.defName);
             return null;
         }
-
         CaveShape caveShapeParams = chosenCaveShape.shape.GetModExtension<CaveShape>();
-        if (caveShapeParams == null)
-        {
-            Log.Error("CE config error: defined cave shape def lacking CaveShape modExtension.");
-            return null;
-        }
 
         int mapHeight;
         int mapWidth;

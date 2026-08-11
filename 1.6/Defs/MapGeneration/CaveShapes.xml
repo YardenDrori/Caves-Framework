@@ -1,14 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Defs>
-
-
-  <!-- ============================================================
-       SHAPES
-       One MapGeneratorDef each. The shared genStep pipeline lives
-       on the abstract parent; children only differ by size.
-       Abstract defs never enter DefDatabase, so the parent can
-       never be rolled as a shape.
-       ============================================================ -->
   <MapGeneratorDef Name="CF_CaveShapeBase" Abstract="True">
     <isUnderground>true</isUnderground>
     <forceCaves>true</forceCaves>
@@ -53,17 +44,17 @@
     </modExtensions>
   </MapGeneratorDef>
 
-  <MapGeneratorDef ParentName="CF_CaveShapeBase">
-    <defName>CF_Shape_Average</defName>
-    <label>average cave</label>
-    <modExtensions>
-      <li Class="CavesFramework.CaveShape">
-        <randomizeHeightAndWidth>false</randomizeHeightAndWidth>
-        <mapWidth>150</mapWidth>
-        <mapHeight>150</mapHeight>
-        <selectionWeight>1</selectionWeight>
-      </li>
-    </modExtensions>
-  </MapGeneratorDef>
+  <!-- <MapGeneratorDef ParentName="CF_CaveShapeBase"> -->
+  <!--   <defName>CF_Shape_Average</defName> -->
+  <!--   <label>average cave</label> -->
+  <!--   <modExtensions> -->
+  <!--     <li Class="CavesFramework.CaveShape"> -->
+  <!--       <randomizeHeightAndWidth>false</randomizeHeightAndWidth> -->
+  <!--       <mapWidth>150</mapWidth> -->
+  <!--       <mapHeight>150</mapHeight> -->
+  <!--       <selectionWeight>1</selectionWeight> -->
+  <!--     </li> -->
+  <!--   </modExtensions> -->
+  <!-- </MapGeneratorDef> -->
 
 </Defs>

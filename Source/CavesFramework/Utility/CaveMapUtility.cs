@@ -14,10 +14,14 @@ public static class CaveMapUtility
         MapGeneratorDef generatorDef,
         IEnumerable<GenStepWithParams> extraGenStepDefs,
         Map sourceMap,
-        BiomeDef biome
-    // List<TileMutatorDef> mutators
+        BiomeDef biome,
+        List<GenStepOverride> overrides
     )
     {
+        ///we save the overrides so we can read them from the genStep worker later as gensteps
+        ///are simpletons we cannot modify them directly without unfavourable behavior
+        MapGenerator.SetVar("genStepOverrides", overrides);
+
         PocketMapParent pocketMapParent =
             WorldObjectMaker.MakeWorldObject(WorldObjectDefOf.PocketMap) as PocketMapParent;
         pocketMapParent.sourceMap = sourceMap;
@@ -29,17 +33,11 @@ public static class CaveMapUtility
             extraGenStepDefs,
             map =>
             {
+                ///we replace the biome cuase in vanilla the biome is defined via MapGeneratorDef
+                ///but we replace it with the biome's mod extension but we have to still provide a biome
+                ///in mapgeneratordef to avoid an NRE so we use change it to the actual biome as a callback
                 map.pocketTileInfo.PrimaryBiome = biome;
-                //future mutator support capability here
-                // if (mutators != null)
-                // {
-                //     foreach (var m in mutators)
-                //     {
-                //         map.TileInfo.AddMutator(m);
-                //         m.Worker?.Init(map);
-                //     }
-                // }
-            }, //THIS line is the magic
+            },
             isPocketMap: true
         );
         Find.World.pocketMaps.Add(pocketMapParent);

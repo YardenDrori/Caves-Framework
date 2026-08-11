@@ -33,40 +33,24 @@ public class CaveEntrance : MapPortal
             );
             return null;
         }
-        List<MapGeneratorDef> allowedCaveShapes;
-        if (
-            pocketMapBiome.blacklistedCaveShapes != null
-            && pocketMapBiome.whitelistedCaveShapes != null
-        )
+        List<CaveShapeEntry> allowedCaveShapes;
+        if (pocketMapBiome.caveShapes.NullOrEmpty())
         {
-            Log.Error(
-                "CE config error: defined cave entrance both whitelisted and blacklisted cave shapes."
-            );
+            Log.Error("CE config error: defined cave entrance with no cave shapes.");
             return null;
-        }
-        else if (pocketMapBiome.whitelistedCaveShapes != null)
-        {
-            //copy, so we never hand out (or later mutate) the def's own list
-            allowedCaveShapes = pocketMapBiome.whitelistedCaveShapes.FindAll(d =>
-                d.HasModExtension<CaveShape>()
-            );
         }
         else
         {
-            //blacklist null too == everything allowed
-            allowedCaveShapes = DefDatabase<MapGeneratorDef>.AllDefsListForReading.FindAll(d =>
-                d.HasModExtension<CaveShape>()
-                && (
-                    pocketMapBiome.blacklistedCaveShapes == null
-                    || !pocketMapBiome.blacklistedCaveShapes.Contains(d)
-                )
+            //copy, so we never hand out (or later mutate) the def's own list
+            allowedCaveShapes = pocketMapBiome.caveShapes.FindAll(d =>
+                d.shape.HasModExtension<CaveShape>()
             );
         }
 
         if (
-            !allowedCaveShapes.TryRandomElementByWeight(
-                d => d.GetModExtension<CaveShape>().selectionWeight,
-                out MapGeneratorDef chosenCaveShape
+            !allowedCaveShapes.TryRandomElementByWeight<CaveShapeEntry>(
+                d => d.shapeWeight,
+                out CaveShapeEntry chosenCaveShape
             )
         )
         {
@@ -74,7 +58,7 @@ public class CaveEntrance : MapPortal
             return null;
         }
 
-        CaveShape caveShapeParams = chosenCaveShape.GetModExtension<CaveShape>();
+        CaveShape caveShapeParams = chosenCaveShape.shape.GetModExtension<CaveShape>();
         if (caveShapeParams == null)
         {
             Log.Error("CE config error: defined cave shape def lacking CaveShape modExtension.");
@@ -96,10 +80,11 @@ public class CaveEntrance : MapPortal
 
         return CaveMapUtility.GeneratePocketMap(
             new IntVec3(mapWidth, 1, mapHeight),
-            chosenCaveShape,
+            chosenCaveShape.shape,
             GetExtraGenSteps(),
             base.Map,
-            cavePortal.pocketMapBiomeDef
+            cavePortal.pocketMapBiomeDef,
+            chosenCaveShape.genStepOverrides
         );
     }
 }

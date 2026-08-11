@@ -14,8 +14,8 @@ public static class CaveMapUtility
         MapGeneratorDef generatorDef,
         IEnumerable<GenStepWithParams> extraGenStepDefs,
         Map sourceMap,
-        BiomeDef biome,
-        List<TileMutatorDef> mutators
+        BiomeDef biome
+    // List<TileMutatorDef> mutators
     )
     {
         PocketMapParent pocketMapParent =
@@ -30,11 +30,15 @@ public static class CaveMapUtility
             map =>
             {
                 map.pocketTileInfo.PrimaryBiome = biome;
-                foreach (var m in mutators)
-                {
-                    map.TileInfo.AddMutator(m);
-                    m.Worker?.Init(map);
-                }
+                //future mutator support capability here
+                // if (mutators != null)
+                // {
+                //     foreach (var m in mutators)
+                //     {
+                //         map.TileInfo.AddMutator(m);
+                //         m.Worker?.Init(map);
+                //     }
+                // }
             }, //THIS line is the magic
             isPocketMap: true
         );

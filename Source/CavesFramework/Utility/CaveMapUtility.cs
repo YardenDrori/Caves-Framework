@@ -18,10 +18,6 @@ public static class CaveMapUtility
         List<GenStepOverride> overrides
     )
     {
-        ///we save the overrides so we can read them from the genStep worker later as gensteps
-        ///are simpletons we cannot modify them directly without unfavourable behavior
-        MapGenerator.SetVar("genStepOverrides", overrides);
-
         PocketMapParent pocketMapParent =
             WorldObjectMaker.MakeWorldObject(WorldObjectDefOf.PocketMap) as PocketMapParent;
         pocketMapParent.sourceMap = sourceMap;
@@ -37,6 +33,11 @@ public static class CaveMapUtility
                 ///but we replace it with the biome's mod extension but we have to still provide a biome
                 ///in mapgeneratordef to avoid an NRE so we use change it to the actual biome as a callback
                 map.pocketTileInfo.PrimaryBiome = biome;
+
+                ///we save the overrides so we can read them from the genStep worker later as gensteps
+                ///are simpletons we cannot modify them directly without unfavourable behavior
+                ///we do this here as the data gets cleared beforehand
+                MapGenerator.SetVar("genStepOverrides", overrides);
             },
             isPocketMap: true
         );

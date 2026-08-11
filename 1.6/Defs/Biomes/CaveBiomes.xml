@@ -2,9 +2,12 @@
 <Defs>
   <BiomeDef ParentName="Biome_Underground">
     <defName>CF_Biome_Test</defName>
-    <label>test cave</label>
-    <description>test cave</description>
+    <label>test cave biome</label>
+    <description>No cost too great. No mind to think. No will to break. No voice to cry suffering...</description>
+
+    <!-- This is the easiest way to see that the biome applied -->
     <constantOutdoorTemperature>-69</constantOutdoorTemperature>
+
     <modExtensions>
       <li Class="CavesFramework.CaveBiomeExt">
         <caveShapes>

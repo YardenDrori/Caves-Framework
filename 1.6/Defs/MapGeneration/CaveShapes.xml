@@ -8,12 +8,10 @@
     <customMapComponents>
       <li>CavesFramework.Comps.MapComps.CollapseCaveTimer</li>
     </customMapComponents>
-    <!-- <pocketMapProperties> -->
-    <!--   <biome>Underground</biome> -->
-    <!--   <temperature>15</temperature> -->
-    <!--   <tileMutators> -->
-    <!--   </tileMutators> -->
-    <!-- </pocketMapProperties> -->
+    <!-- We need an empty pocketMapProperties cause we set the isPocketMap flag to true -->
+    <!-- for a variety of reasons but we don't use anything from pocketMapProperties -->
+    <!-- due to our map info coming from biome not mapgeneratordef -->
+    <pocketMapProperties></pocketMapProperties>
     <genSteps>
       <li>ElevationFertility</li>
       <li>MutatorPostElevationFertility</li>

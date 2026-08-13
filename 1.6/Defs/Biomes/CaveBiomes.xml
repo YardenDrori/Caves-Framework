@@ -10,5 +10,10 @@
 
     <!-- This is the easiest way to see that the biome applied -->
     <constantOutdoorTemperature>-69</constantOutdoorTemperature>
+    <terrainsByFertility>
+      <li>
+        <terrain>Gravel</terrain>
+      </li>
+    </terrainsByFertility>
   </BiomeDef>
 </Defs>

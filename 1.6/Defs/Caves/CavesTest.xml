@@ -33,14 +33,17 @@
       <li>Cavern</li>
     </mutators>
 
-    <!-- Sometimes applied, to exercise the optional path and the chance decay. -->
+    <!-- Sometimes applied, to exercise the optional path and the chance decay.
+         NOT CaveLakes - it shares the "Caves" category with Cavern and loses the
+         priority check in Tile.AddMutator, which logs an error. MineralRich has no
+         overlapping category. -->
     <optionalMutators>
       <maxOptionalMutatorsActive>1</maxOptionalMutatorsActive>
       <chanceForOptionalMutators>0.5</chanceForOptionalMutators>
       <additionalMutatorChanceMult>0.5</additionalMutatorChanceMult>
       <optionalMutators>
         <li>
-          <mutator>CaveLakes</mutator>
+          <mutator>MineralRich</mutator>
           <mutatorWeight>1</mutatorWeight>
         </li>
       </optionalMutators>

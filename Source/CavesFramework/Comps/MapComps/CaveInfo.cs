@@ -28,9 +28,11 @@ public class CaveInfo : CustomMapComponent
             if (fixedGeneratorDef == null)
             {
                 Log.Warning("CF: failed to retrieve cavern details. Falling back to default values.");
+                Log.Message(map.generatorDef.pocketMapProperties.biome);
                 return;
             }
             base.map.generatorDef = fixedGeneratorDef;
+            Log.Message(map.generatorDef.pocketMapProperties.biome);
         }
     }
 

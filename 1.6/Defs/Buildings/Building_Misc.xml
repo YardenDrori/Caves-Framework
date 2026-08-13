@@ -58,7 +58,9 @@
       <drawSize>(4,4)</drawSize>
     </graphicData>
     <portal Class="CavesFramework.CavePortalProperties">
-      <pocketMapBiomeDef>CF_Biome_Test</pocketMapBiomeDef>
+      <!-- pocketMapGenerator is deliberately absent: CavesFrameworkMod.FillLabelOnlyGenerators
+           fills it with a label-only def, because MapPortal NREs on it in GetGizmos. -->
+      <cave>CF_Cave_Test</cave>
       <exitDef>CaveExit</exitDef>
       <enteredLetterLabel>Fleshbeast lair</enteredLetterLabel>
       <enteredLetterText>In the depths of the pit gate, you have discovered a massive cavern system infested with fleshbeasts.\n\nThe cavern system is clogged with masses of living flesh that block your progress. Attack the fleshmass to destroy it.\n\nThe entire cavern system seems unstable. If you find what lies behind the fleshmass, you may be able to collapse the tunnels and close the pit gate.</enteredLetterText>

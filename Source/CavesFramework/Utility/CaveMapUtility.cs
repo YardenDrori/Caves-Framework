@@ -67,7 +67,7 @@ public static class CaveMapUtility
     //to repopulate so that we don't use any data from the template
     public static MapGeneratorDef BuildMapGeneratorDefFromParts(CaveDef caveDef, CaveShapeDef caveShapeDef, BiomeDef biomeDef, List<TileMutatorDef> mutators)
     {
-        if (caveDef == null || caveShapeDef == null || biomeDef == null || mutators == null)
+        if (caveDef == null || caveShapeDef == null || biomeDef == null)
         {
             return null;
         }
@@ -111,8 +111,7 @@ public static class CaveMapUtility
         List<Type> compsToAdd = new List<Type>();
         compsToAdd.AddRange(fixedGeneratorDef.customMapComponents);
         compsToAdd.AddRange(caveShapeDef.customMapComponents);
-        compsToAdd.Distinct();
-        fixedGeneratorDef.customMapComponents = compsToAdd;
+        fixedGeneratorDef.customMapComponents = compsToAdd.Distinct().ToList();
 
         fixedGeneratorDef.ignoreAreaRevealedLetter = true;
         fixedGeneratorDef.disableShadows = caveDef.disableShadows;

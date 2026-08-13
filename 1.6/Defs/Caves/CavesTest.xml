@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+
+  <CavesFramework.CaveDef>
+    <defName>CF_Cave_Test</defName>
+    <label>test cavern</label>
+    <description>A test cave. If you are seeing this in a released mod, something went wrong.</description>
+
+    <!-- Weighted 1:3, so roughly a quarter of caves should come out 50x300 (or 300x50,
+         since CF_Shape_Long randomizes the axis) and the rest 150x150. -->
+    <shapes>
+      <li>
+        <shape>CF_Shape_Long</shape>
+        <shapeWeight>1</shapeWeight>
+      </li>
+      <li>
+        <shape>CF_Shape_Average</shape>
+        <shapeWeight>3</shapeWeight>
+      </li>
+    </shapes>
+
+    <!-- Single biome for now. Its constantOutdoorTemperature of -69 is the tell that
+         the biome actually reached pocketMapProperties. -->
+    <biomes>
+      <li>
+        <biome>CF_Biome_Test</biome>
+        <biomeWeight>1</biomeWeight>
+      </li>
+    </biomes>
+
+    <!-- Always applied. -->
+    <mutators>
+      <li>Cavern</li>
+    </mutators>
+
+    <!-- Sometimes applied, to exercise the optional path and the chance decay. -->
+    <optionalMutators>
+      <maxOptionalMutatorsActive>1</maxOptionalMutatorsActive>
+      <chanceForOptionalMutators>0.5</chanceForOptionalMutators>
+      <additionalMutatorChanceMult>0.5</additionalMutatorChanceMult>
+      <optionalMutators>
+        <li>
+          <mutator>CaveLakes</mutator>
+          <mutatorWeight>1</mutatorWeight>
+        </li>
+      </optionalMutators>
+    </optionalMutators>
+  </CavesFramework.CaveDef>
+
+</Defs>

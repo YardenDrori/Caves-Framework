@@ -8,14 +8,14 @@ namespace CavesFramework;
 
 public class CaveEntrance : MapPortal
 {
-    public CaveDef cave = null;
+    private CaveDef Cave => (def.portal as CavePortalProperties)?.cave;
 
     /// Vanilla picks one hardcoded generator at a fixed square size. We instead
     /// roll a shape (a MapGeneratorDef carrying CaveShape) allowed by our biome,
     /// and take the map dimensions from it.
     protected override Map GeneratePocketMapInt()
     {
-        if (cave == null)
+        if (Cave == null)
         {
             Log.Error("CF: " + def.defName + "'s cave property not filled.");
             return null;
@@ -23,7 +23,7 @@ public class CaveEntrance : MapPortal
 
         if (ChooseBiome() is not BiomeDef caveBiomeDef)
         {
-            Log.Error("CF: no valid biome for cave " + cave.defName);
+            Log.Error("CF: no valid biome for cave " + Cave.defName);
             return null;
         }
         var (caveShapeDef, caveShapeOverrides) = ChooseCaveShape();
@@ -54,7 +54,7 @@ public class CaveEntrance : MapPortal
             base.Map,
             caveBiomeDef,
             caveShapeDef,
-            cave,
+            Cave,
             caveShapeOverrides,
             mutatorsToAdd
         );
@@ -62,7 +62,7 @@ public class CaveEntrance : MapPortal
 
     private BiomeDef ChooseBiome()
     {
-        if (!cave.biomes.TryRandomElementByWeight(d => d.biomeWeight, out CaveBiomeEntry biome))
+        if (!Cave.biomes.TryRandomElementByWeight(d => d.biomeWeight, out CaveBiomeEntry biome))
         {
             return null;
         }
@@ -71,7 +71,7 @@ public class CaveEntrance : MapPortal
 
     private (CaveShapeDef, List<GenStepOverride>) ChooseCaveShape()
     {
-        if (!cave.shapes.TryRandomElementByWeight(d => d.shapeWeight, out CaveShapeEntry shape))
+        if (!Cave.shapes.TryRandomElementByWeight(d => d.shapeWeight, out CaveShapeEntry shape))
         {
             return (null, null);
         }
@@ -83,12 +83,12 @@ public class CaveEntrance : MapPortal
     private List<TileMutatorDef> ChooseMutators()
     {
         List<TileMutatorDef> mutators = new();
-        mutators.AddRange(cave.mutators);
-        if (cave.optionalMutators != null)
+        mutators.AddRange(Cave.mutators);
+        if (Cave.optionalMutators != null)
         {
-            float chanceForMut = cave.optionalMutators.chanceForOptionalMutators;
-            int mutatorsToAddCount = Math.Min(cave.optionalMutators.maxOptionalMutatorsActive, cave.optionalMutators.optionalMutators.Count);
-            List<OptionalMutatorEntry> remainingMutators = cave.optionalMutators.optionalMutators.ToList();
+            float chanceForMut = Cave.optionalMutators.chanceForOptionalMutators;
+            int mutatorsToAddCount = Math.Min(Cave.optionalMutators.maxOptionalMutatorsActive, Cave.optionalMutators.optionalMutators.Count);
+            List<OptionalMutatorEntry> remainingMutators = Cave.optionalMutators.optionalMutators.ToList();
 
             for (int i = 0; i < mutatorsToAddCount; i++)
             {
@@ -102,10 +102,10 @@ public class CaveEntrance : MapPortal
                 }
                 if (chosenMutator.mutator == null)
                 {
-                    Log.Error("CF: defined optional mutator in CaveDef " + cave.defName + " with no TileMutatorDef.");
+                    Log.Error("CF: defined optional mutator in CaveDef " + Cave.defName + " with no TileMutatorDef.");
                     continue;
                 }
-                chanceForMut *= cave.optionalMutators.additionalMutatorChanceMult;
+                chanceForMut *= Cave.optionalMutators.additionalMutatorChanceMult;
                 remainingMutators.Remove(chosenMutator);
                 mutators.Add(chosenMutator.mutator);
             }

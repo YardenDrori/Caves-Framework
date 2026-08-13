@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Defs>
+  <!-- A plain BiomeDef with no CF-specific extension. This is the point of CaveDef owning
+       the shape/biome pairing: any vanilla or third-party biome can be used as a cave biome
+       without cooperating with this mod. -->
   <BiomeDef ParentName="Biome_Underground">
     <defName>CF_Biome_Test</defName>
     <label>test cave biome</label>
@@ -7,17 +10,5 @@
 
     <!-- This is the easiest way to see that the biome applied -->
     <constantOutdoorTemperature>-69</constantOutdoorTemperature>
-
-    <modExtensions>
-      <li Class="CavesFramework.CaveBiomeExt">
-        <caveShapes>
-          <li>
-            <shape>CF_Shape_Long</shape>
-            <shapeWeight>1</shapeWeight>
-          </li>
-        </caveShapes>
-        <biomeWeight>1</biomeWeight>
-      </li>
-    </modExtensions>
   </BiomeDef>
 </Defs>

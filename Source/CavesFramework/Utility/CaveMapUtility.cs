@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using RimWorld;
 using RimWorld.Planet;
 using Verse;
@@ -23,17 +25,60 @@ public static class CaveMapUtility
         PocketMapParent pocketMapParent = WorldObjectMaker.MakeWorldObject(WorldObjectDefOf.PocketMap) as PocketMapParent;
         pocketMapParent.sourceMap = sourceMap;
 
-        //We build our own MapGeneratorDef because the vanilla one is limiting the ways we can mix and match
-        //genSteps with biomes and mutators so here we use the defs we defined to build and instance the game expects
-        //this instance will sit in memory in the map but will be erased upon game reload so we also need a harmony patch
-        //to repopulate so that we don't use any data from the template
-        MapGeneratorDef MapGenDefTemplate = DefDatabase<MapGeneratorDef>.GetNamed("CF_CaveMapGenerator", false);
-        if (MapGenDefTemplate == null)
+        MapGeneratorDef fixedGeneratorDef = BuildMapGeneratorDefFromParts(caveDef, caveShapeDef, biomeDef, mutators);
+        if (fixedGeneratorDef == null)
+        {
+            return null;
+        }
+
+        Map result = MapGenerator.GenerateMap(
+            size,
+            pocketMapParent,
+            fixedGeneratorDef,
+            extraGenStepDefs,
+            map =>
+            {
+                //we save the overrides so we can read them from the genStep worker later as gensteps
+                //are simpletons we cannot modify them directly without unfavourable behavior
+                //we do this here as the data gets cleared beforehand
+                MapGenerator.SetVar("genStepOverrides", overrides);
+
+                //we tell the comp here the map info so it'll know how to retrieve it on load
+                CaveInfo caveInfo = map.GetComponent<CaveInfo>();
+                if (caveInfo == null)
+                {
+                    Log.Error("CF: failed to fetch CaveInfo component from newly created cave.");
+                    return;
+                }
+                // caveInfo.biomeDef = biomeDef;
+                // caveInfo.caveDef = caveDef;
+                // caveInfo.caveShapeDef = caveShapeDef;
+                // caveInfo.mutators = mutators;
+            },
+            isPocketMap: true
+        );
+        Find.World.pocketMaps.Add(pocketMapParent);
+        return result;
+    }
+
+    //We build our own MapGeneratorDef because the vanilla one is limiting the ways we can mix and match
+    //genSteps with biomes and mutators so here we use the defs we defined to build and instance the game expects
+    //this instance will sit in memory in the map but will be erased upon game reload so we also need a harmony patch
+    //to repopulate so that we don't use any data from the template
+    public static MapGeneratorDef BuildMapGeneratorDefFromParts(CaveDef caveDef, CaveShapeDef caveShapeDef, BiomeDef biomeDef, List<TileMutatorDef> mutators)
+    {
+        if (caveDef == null || caveShapeDef == null || biomeDef == null || mutators == null)
+        {
+            return null;
+        }
+
+        MapGeneratorDef mapGenDefTemplate = DefDatabase<MapGeneratorDef>.GetNamed("CF_CaveMapGenerator", false);
+        if (mapGenDefTemplate == null)
         {
             Log.Error("CF: ThingDef CF_CaveMapGenerator not found.");
             return null;
         }
-        MapGeneratorDef fixedGeneratorDef = Gen.MemberwiseClone(MapGenDefTemplate);
+        MapGeneratorDef fixedGeneratorDef = Gen.MemberwiseClone(mapGenDefTemplate);
 
         //=====Populate the mapGenDef=====
         // coppy the Def info
@@ -62,26 +107,17 @@ public static class CaveMapUtility
         fixedGeneratorDef.forceCaves = false;
         fixedGeneratorDef.genSteps = caveShapeDef.genSteps;
         fixedGeneratorDef.pocketMapProperties = pocketMapProperties;
-        fixedGeneratorDef.customMapComponents = caveShapeDef.customMapComponents;
+
+        List<Type> compsToAdd = new List<Type>();
+        compsToAdd.AddRange(fixedGeneratorDef.customMapComponents);
+        compsToAdd.AddRange(caveShapeDef.customMapComponents);
+        compsToAdd.Distinct();
+        fixedGeneratorDef.customMapComponents = compsToAdd;
+
         fixedGeneratorDef.ignoreAreaRevealedLetter = true;
         fixedGeneratorDef.disableShadows = caveDef.disableShadows;
         fixedGeneratorDef.disableCallAid = true;
 
-        Map result = MapGenerator.GenerateMap(
-            size,
-            pocketMapParent,
-            fixedGeneratorDef,
-            extraGenStepDefs,
-            map =>
-            {
-                //we save the overrides so we can read them from the genStep worker later as gensteps
-                //are simpletons we cannot modify them directly without unfavourable behavior
-                //we do this here as the data gets cleared beforehand
-                MapGenerator.SetVar("genStepOverrides", overrides);
-            },
-            isPocketMap: true
-        );
-        Find.World.pocketMaps.Add(pocketMapParent);
-        return result;
+        return fixedGeneratorDef;
     }
 }

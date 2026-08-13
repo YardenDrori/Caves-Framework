@@ -1,0 +1,25 @@
+<Defs>
+  <MapGeneratorDef>
+    <defName>CF_CaveMapGenerator</defName>
+    <label>error: CF_CaveMapGenerator label not changed</label>
+    <isUnderground>true</isUnderground>
+    <forceCaves>false</forceCaves>
+    <ignoreAreaRevealedLetter>true</ignoreAreaRevealedLetter>
+    <disableCallAid>true</disableCallAid>
+    <pocketMapProperties>
+      <biome>Undercave</biome>
+    </pocketMapProperties>
+    <genSteps>
+      <li>ElevationFertility</li>
+      <li>MutatorPostElevationFertility</li>
+    </genSteps>
+  </MapGeneratorDef>
+
+  <BiomeDef ParentName="Biome_Underground">
+    <defName>CF_Biome_Error</defName>
+    <label>oh no</label>
+    <description>Hey! if you see this biome, something went horribly wrong its just a placeholder!</description>
+    <!-- This is the easiest way to see that the biome applied -->
+    <constantOutdoorTemperature>-69</constantOutdoorTemperature>
+  </BiomeDef>
+</Defs>

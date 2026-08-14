@@ -1,0 +1,41 @@
+using System.Collections;
+using System.Collections.Generic;
+using Verse;
+
+namespace CavesFramework;
+
+public class CompProperties_CaveEntranceDevStuff : CompProperties
+{
+  public CompProperties_CaveEntranceDevStuff()
+  {
+    compClass = typeof(CompCaveEntranceDevStuff);
+  }
+}
+
+public class CompCaveEntranceDevStuff : ThingComp
+{
+  public override IEnumerable<Gizmo> CompGetGizmosExtra()
+  {
+    if (Prefs.DevMode)
+    {
+      if (parent.def.portal is not CavePortalProperties portalProps)
+      {
+        Log.Error("CF: " + parent.def.defName + " does not have CavePortalProperties.");
+        yield return null;
+      }
+
+      yield return new Command_Action
+      {
+        defaultLabel = "Debug: change cave shape (currently " + +")",
+        action =
+          () => { /* todo */
+          },
+      };
+    }
+  }
+}
+
+// public virtual IEnumerable<Gizmo> CompGetGizmosExtra()
+// {
+// 	return Enumerable.Empty<Gizmo>();
+// }

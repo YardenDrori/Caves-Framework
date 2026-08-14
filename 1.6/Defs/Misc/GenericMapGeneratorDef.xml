@@ -1,0 +1,25 @@
+<Defs>
+  <MapGeneratorDef>
+    <defName>CF_CaveMapGenerator</defName>
+    <label>error: CF_CaveMapGenerator label not changed</label>
+    <isUnderground>true</isUnderground>
+    <ignoreAreaRevealedLetter>true</ignoreAreaRevealedLetter>
+    <disableCallAid>true</disableCallAid>
+    <customMapComponents>
+      <li>CavesFramework.CaveInfo</li>
+    </customMapComponents>
+    <pocketMapProperties>
+      <biome>CF_Biome_Error</biome>
+    </pocketMapProperties>
+    <genSteps>
+      <li>ElevationFertility</li>
+    </genSteps>
+  </MapGeneratorDef>
+
+  <BiomeDef ParentName="Biome_Underground">
+    <defName>CF_Biome_Error</defName>
+    <label>Do you want to have a picnic with Mari?</label>
+    <description>The sun shined brighter when she was here.</description>
+    <constantOutdoorTemperature>922</constantOutdoorTemperature>
+  </BiomeDef>
+</Defs>

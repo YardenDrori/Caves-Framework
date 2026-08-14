@@ -27,7 +27,7 @@ public class OptionalMutators
     public List<OptionalMutatorEntry> optionalMutators = new();
 
     public int maxOptionalMutatorsActive = 1;
-    public float chanceForOptionalMutators = 0f;
+    public float chanceForOptionalMutators = 0.15f;
     public float additionalMutatorChanceMult = 0.5f;
 }
 

@@ -18,7 +18,6 @@ public static class CaveMapUtility
         BiomeDef biomeDef,
         CaveShapeDef caveShapeDef,
         CaveDef caveDef,
-        List<GenStepOverride> overrides,
         List<TileMutatorDef> mutators
     )
     {
@@ -38,11 +37,6 @@ public static class CaveMapUtility
             extraGenStepDefs,
             map =>
             {
-                //we save the overrides so we can read them from the genStep worker later as gensteps
-                //are simpletons we cannot modify them directly without unfavourable behavior
-                //we do this here as the data gets cleared beforehand
-                MapGenerator.SetVar("genStepOverrides", overrides);
-
                 //we tell the comp here the map info so it'll know how to retrieve it on load
                 CaveInfo caveInfo = map.GetComponent<CaveInfo>();
                 if (caveInfo == null)

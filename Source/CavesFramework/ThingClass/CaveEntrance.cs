@@ -26,8 +26,8 @@ public class CaveEntrance : MapPortal
             Log.Error("CF: no valid biome for cave " + Cave.defName);
             return null;
         }
-        var (caveShapeDef, caveShapeOverrides) = ChooseCaveShape();
-        if (caveShapeDef == null)
+
+        if (ChooseCaveShape() is not CaveShapeDef caveShapeDef)
         {
             Log.Error("CF: no valid cave shape for biome " + caveBiomeDef.defName);
             return null;
@@ -55,7 +55,6 @@ public class CaveEntrance : MapPortal
             caveBiomeDef,
             caveShapeDef,
             Cave,
-            caveShapeOverrides,
             mutatorsToAdd
         );
     }
@@ -69,13 +68,13 @@ public class CaveEntrance : MapPortal
         return biome.biome;
     }
 
-    private (CaveShapeDef, List<GenStepOverride>) ChooseCaveShape()
+    private CaveShapeDef ChooseCaveShape()
     {
         if (!Cave.shapes.TryRandomElementByWeight(d => d.shapeWeight, out CaveShapeEntry shape))
         {
-            return (null, null);
+            return null;
         }
-        return (shape.shape, shape.genStepsOverrides);
+        return shape.shape;
     }
 
 #pragma warning disable IDE0305

@@ -7,7 +7,6 @@ namespace CavesFramework;
 public class CaveShapeEntry
 {
     public CaveShapeDef shape;
-    public List<GenStepOverride> genStepsOverrides = new();
     public float shapeWeight = 1f;
 }
 

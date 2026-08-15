@@ -13,12 +13,13 @@ public static class CaveGridUtility
     Predicate<IntVec3> match
   )
   {
-    //this is -1 because we always end up counting ourselves with this method so this is to compensate
-    int count = -1;
+    int count = 0;
     for (int x = -1; x <= 1; x++)
     {
       for (int z = -1; z <= 1; z++)
       {
+        if (x == 0 && z == 0) { continue; }
+
         IntVec3 targetCell = new IntVec3
         {
           x = cell.x + x,

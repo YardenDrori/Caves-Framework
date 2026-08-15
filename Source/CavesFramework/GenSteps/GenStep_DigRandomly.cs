@@ -16,7 +16,7 @@ public class GenStep_DigRandomly : GenStep
     {
       if (Rand.Chance(fillPercentageInstance))
       {
-        caves[allcell] = 1f;
+        caves[allcell] = CaveGridConstants.emptySpace;
       }
     }
   }

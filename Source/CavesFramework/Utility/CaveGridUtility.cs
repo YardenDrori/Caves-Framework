@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Security.Policy;
 using Verse;
 
 namespace CavesFramework;
@@ -71,78 +69,30 @@ public static class CaveGridUtility
       }
       visited.Add(allcell);
 
-      List<IntVec3> region = GetRegion(
+      List<IntVec3> region = new();
+
+      map.floodFiller.FloodFill(
         allcell,
-        map,
         c =>
         {
           return !CaveGridConstants.IsAnyRock(caves[c]);
+        },
+        c =>
+        {
+          region.Add(c);
+          visited.Add(c);
+          return false;
         }
       );
-      if (!region.NullOrEmpty())
+
+      if (region.NullOrEmpty())
       {
-        foreach (var cell in region)
-        {
-          visited.Add(cell);
-        }
-        allRegions.Add(region);
+        continue;
       }
+
+      allRegions.Add(region);
     }
 
     return allRegions;
-  }
-
-  public static List<IntVec3> GetRegion(IntVec3 root, Map map, Predicate<IntVec3> isPartOfRegion, bool spreadThroughCorners = false)
-  {
-    if (!isPartOfRegion(root))
-    {
-      return null;
-    }
-
-    //we have a list for return and a hashset for performance for contains checks
-    List<IntVec3> region = new();
-    HashSet<IntVec3> visited = new();
-    region.Add(root);
-    visited.Add(root);
-
-    Queue<IntVec3> queue = new Queue<IntVec3>();
-    queue.Enqueue(root);
-
-    while (queue.Count > 0)
-    {
-      IntVec3 cell = queue.Dequeue();
-
-      for (int x = -1; x <= 1; x++)
-      {
-        for (int z = -1; z <= 1; z++)
-        {
-          if (x == 0 && z == 0 || !spreadThroughCorners && x != 0 && z != 0)
-          {
-            continue;
-          }
-
-          IntVec3 currCell = new IntVec3(cell.x + x, cell.y, cell.z + z);
-          if (visited.Contains(currCell))
-          {
-            continue;
-          }
-
-          if (!currCell.InBounds(map))
-          {
-            continue;
-          }
-
-          if (!isPartOfRegion(currCell))
-          {
-            continue;
-          }
-
-          visited.Add(currCell);
-          region.Add(currCell);
-          queue.Enqueue(currCell);
-        }
-      }
-    }
-    return region;
   }
 }

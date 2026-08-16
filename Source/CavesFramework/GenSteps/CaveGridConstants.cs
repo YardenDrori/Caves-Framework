@@ -1,5 +1,3 @@
-using System;
-
 namespace CavesFramework;
 
 public static class CaveGridConstants

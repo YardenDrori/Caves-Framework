@@ -9,9 +9,9 @@ public static class CaveGridUtility
   //solid
   public const float border = -30f;
 
-  //ore doesn't spawn in any value other than 1 we use 1 and not 0 because otherwise we'd generate ore twice
+  //ore doesn't spawn in any value other than -1 we use -1 and not 0 because otherwise we'd generate ore twice
   //when calling Underground_RocksFromGrid
-  public const float rock = 1f;
+  public const float rock = -1f;
 
   //empty
   public const float emptySpace = 1f;

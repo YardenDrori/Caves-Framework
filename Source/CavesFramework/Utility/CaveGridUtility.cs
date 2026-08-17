@@ -8,7 +8,7 @@ public static class CaveGridUtility
 {
   //solid
   public const float border = -30f;
-  public const float rock = 0f;
+  public const float rock = 0f; //ore doesn't spawn in any value other than 0
 
   //empty
   public const float emptySpace = 1f;

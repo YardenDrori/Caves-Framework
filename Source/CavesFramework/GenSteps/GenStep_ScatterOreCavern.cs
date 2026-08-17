@@ -125,7 +125,7 @@ public class GenStep_ScatterOreCavern : GenStep_ScatterLumpsMineable
             return false;
           }
 
-          return MapGenerator.Caves[cell] == 0f;
+          return MapGenerator.Caves[cell] == 1f;
         }
         return true;
       }

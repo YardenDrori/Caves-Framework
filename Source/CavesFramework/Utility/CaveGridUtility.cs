@@ -103,6 +103,14 @@ public static class CaveGridUtility
       allRegions.Add(region);
     }
 
+    //sorts in descending order
+    allRegions.Sort(
+      (a, b) =>
+      {
+        return b.Count - a.Count;
+      }
+    );
+
     return allRegions;
   }
 

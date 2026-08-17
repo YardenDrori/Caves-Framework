@@ -30,24 +30,24 @@ public class GenStep_CellularAutomata : GenStep
 
       foreach (IntVec3 allcell in map.AllCells)
       {
-        if (CaveGridConstants.border == caveGridSnapshot[allcell])
+        if (CaveGridUtility.border == caveGridSnapshot[allcell])
         {
           continue;
         }
 
         //we count cells that are a wall as a neighbor
-        int neighbors = CaveGridUtility.NeighborCount(allcell, map, countOutOfBoundsCells: true, c => CaveGridConstants.IsAnyRock(caveGridSnapshot[c]));
+        int neighbors = CaveGridUtility.NeighborCount(allcell, map, countOutOfBoundsCells: true, c => CaveGridUtility.IsAnyRock(caveGridSnapshot[c]));
 
-        if (CaveGridConstants.IsAnyRock(caveGridSnapshot[allcell]))
+        if (CaveGridUtility.IsAnyRock(caveGridSnapshot[allcell]))
         {
           if (neighbors < neighborsForFullCellToBeStayI)
           {
-            caveGridLive[allcell] = CaveGridConstants.emptySpace;
+            caveGridLive[allcell] = CaveGridUtility.emptySpace;
           }
         }
         else if (neighbors >= neighborsForEmptyCellToBeWallI)
         {
-          caveGridLive[allcell] = CaveGridConstants.rock;
+          caveGridLive[allcell] = CaveGridUtility.rock;
         }
       }
     }

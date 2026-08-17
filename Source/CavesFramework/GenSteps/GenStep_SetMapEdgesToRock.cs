@@ -18,11 +18,11 @@ public class GenStep_SetMapEdgesToRock : GenStep
     {
       if (allcell.CloseToEdge(map, guaranteedThickness))
       {
-        caves[allcell] = CaveGridConstants.border;
+        caves[allcell] = CaveGridUtility.border;
       }
       else if (allcell.CloseToEdge(map, guaranteedThickness + 1) && Rand.Chance(additionalThicknessChance))
       {
-        caves[allcell] = CaveGridConstants.border;
+        caves[allcell] = CaveGridUtility.border;
       }
     }
   }

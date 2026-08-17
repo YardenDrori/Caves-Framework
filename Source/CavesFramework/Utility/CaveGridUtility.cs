@@ -6,6 +6,13 @@ namespace CavesFramework;
 
 public static class CaveGridUtility
 {
+  //solid
+  public const float border = -30f;
+  public const float rock = 0f;
+
+  //empty
+  public const float emptySpace = 1f;
+
   // csharpier-ignore
   public static int NeighborCount(
     IntVec3 cell,
@@ -75,7 +82,7 @@ public static class CaveGridUtility
         allcell,
         c =>
         {
-          return !CaveGridConstants.IsAnyRock(caves[c]);
+          return !IsAnyRock(caves[c]);
         },
         c =>
         {
@@ -94,5 +101,15 @@ public static class CaveGridUtility
     }
 
     return allRegions;
+  }
+
+  public static bool IsAnyRock(float caveGridVal)
+  {
+    return caveGridVal <= 0;
+  }
+
+  public static bool IsWorkableRock(float caveGridVal)
+  {
+    return IsAnyRock(caveGridVal) && caveGridVal != border;
   }
 }

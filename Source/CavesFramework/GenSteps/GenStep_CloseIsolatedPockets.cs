@@ -18,7 +18,7 @@ public class GenStep_CloseIsolatedPockets : GenStep
     MapGenFloatGrid caves = MapGenerator.Caves;
     foreach (IntVec3 cell in region)
     {
-      caves[cell] = CaveGridConstants.rock;
+      caves[cell] = CaveGridUtility.rock;
     }
   }
 

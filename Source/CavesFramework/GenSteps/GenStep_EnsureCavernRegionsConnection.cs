@@ -1,7 +1,9 @@
-using System;
 using System.Collections.Generic;
+using System.Linq;
+using RimWorld;
 using UnityEngine;
 using Verse;
+using Verse.Noise;
 
 namespace CavesFramework;
 
@@ -17,12 +19,23 @@ public class GenStep_EnsureCavernRegionsConnection : GenStep
   public override int SeedPart => 260373577;
 
   public int maxDistanceToConnect = int.MaxValue;
-  public IntRange tunnelWidth = new IntRange(2, 6);
-  public bool rerollTunnelWidthPerTunnel = true;
+
+  public bool rerollTunnelParamatersPerTunnel = true;
+  public FloatRange tunnelWidth = new FloatRange(2, 6);
+  public FloatRange windiness = new FloatRange(6, 6);
+  public FloatRange deadEndBranchChance = new FloatRange(0f, 0f);
+  public FloatRange narrowingRate = new FloatRange(0.01f, 0.034f);
 
   public override void Generate(Map map, GenStepParams parms)
   {
     List<List<IntVec3>> regions = CaveGridUtility.GetCaveRegions(map);
+    List<IntVec3> diggableCells = map.AllCells.Except(regions.SelectMany(l => l)).ToList();
+
+    float constWidth = tunnelWidth.RandomInRange;
+    MapGenCavesUtility.CaveGenParms caveParmsConst = MapGenCavesUtility.CaveGenParms.Default;
+    caveParmsConst.directionChangeSpeed = windiness.RandomInRange;
+    caveParmsConst.branchChance = deadEndBranchChance.RandomInRange;
+    caveParmsConst.widthOffsetPerCell = narrowingRate.RandomInRange;
 
     if (regions.NullOrEmpty())
     {
@@ -98,7 +111,40 @@ public class GenStep_EnsureCavernRegionsConnection : GenStep
       state[regionToVisit] = RegionState.Visited;
       remaining--;
 
-      //dig here
+      float width;
+      MapGenCavesUtility.CaveGenParms caveParms;
+      if (rerollTunnelParamatersPerTunnel)
+      {
+        width = tunnelWidth.RandomInRange;
+        caveParms = caveParmsConst;
+        caveParmsConst.directionChangeSpeed = windiness.RandomInRange;
+        caveParmsConst.branchChance = deadEndBranchChance.RandomInRange;
+        caveParmsConst.widthOffsetPerCell = narrowingRate.RandomInRange;
+      }
+      else
+      {
+        width = constWidth;
+        caveParms = caveParmsConst;
+      }
+
+      Vector3 vect1 = cellRegion1.ToVector3();
+      Vector3 vect2 = cellRegion2.ToVector3();
+      float angle = vect1.AngleToFlat(vect2);
+      ModuleBase directionNoise = new Perlin(0.00205, 2.0, 0.5, 4, Rand.Int, QualityMode.Medium);
+      MapGenCavesUtility.Dig(
+        cellRegion1,
+        angle,
+        width,
+        diggableCells,
+        map,
+        closed: false,
+        directionNoise,
+        caveParms,
+        cell =>
+        {
+          return CaveGridUtility.IsWorkableRock(MapGenerator.Caves[cell]);
+        }
+      );
     }
   }
 

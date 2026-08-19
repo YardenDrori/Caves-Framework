@@ -104,10 +104,12 @@ public class GenStep_ScatterOreCavern : GenStep_ScatterLumpsMineable
 
     recentLumpCells.Clear();
     List<CellRect> usedRects = MapGenerator.GetOrGenerateVar<List<CellRect>>("UsedRects");
+    MapGenFloatGrid caves = MapGenerator.Caves;
 
     foreach (IntVec3 cell in GridShapeMaker.IrregularLump(c, map, numCells, Validator))
     {
       GenSpawn.Spawn(thingDef, cell, map);
+      caves[cell] = CaveGridUtility.ore;
       recentLumpCells.Add(cell);
     }
 

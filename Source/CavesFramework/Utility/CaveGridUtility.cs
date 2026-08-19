@@ -12,8 +12,9 @@ public static class CaveGridUtility
   //ore doesn't spawn in any value other than -1 we use -1 and not 0 because otherwise we'd generate ore twice
   //when calling Underground_RocksFromGrid
   public const float rock = -1f;
+  public const float ore = -2f;
 
-  //empty
+  //empty - cant have more types of open space because of the dig method
   public const float emptySpace = 1f;
 
   // csharpier-ignore

@@ -20,7 +20,7 @@ public class GenStep_ScatterOreCavern : GenStep_ScatterLumpsMineable
   public IntRange? veinSizeOverride;
   public FloatRange? veinSizeMultiplier;
 
-  public ExitDistanceWeighting commonalityRatePerCellFromExit = new();
+  public RatioConfigExitDist commonalityRatePerCellFromExit = new();
   public RatioConfig veinSizeMultPerCellFromExit = new();
 
   public bool mustBeBuriedInRock = false;
@@ -120,7 +120,7 @@ public class GenStep_ScatterOreCavern : GenStep_ScatterLumpsMineable
   {
     ValidCellCache.Remove(c);
 
-    var (thingDef, numCells) = GetLumpDefAndSize(c);
+    var (thingDef, numCells) = GetLumpDefAndSize(c, map);
     if (thingDef == null || numCells == 0)
     {
       return;
@@ -191,9 +191,9 @@ public class GenStep_ScatterOreCavern : GenStep_ScatterLumpsMineable
     return true;
   }
 
-  private (ThingDef, int) GetLumpDefAndSize(IntVec3 cell)
+  private (ThingDef, int) GetLumpDefAndSize(IntVec3 cell, Map map)
   {
-    float ratio = ScattererUtil.FactorAtCell(cell, veinSizeMultPerCellFromExit);
+    float ratio = veinSizeMultPerCellFromExit.FactorAtCell(cell, map);
     ThingDef oreDef = ChooseThingDef();
     if (oreDef == null)
     {

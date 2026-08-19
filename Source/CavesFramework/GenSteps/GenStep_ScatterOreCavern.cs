@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -19,12 +20,17 @@ public class GenStep_ScatterOreCavern : GenStep_ScatterLumpsMineable
   public IntRange? veinSizeOverride;
   public FloatRange? veinSizeMultiplier;
 
+  public ExitDistanceWeighting commonalityRatePerCellFromExit = new();
+  public RatioConfig veinSizeMultPerCellFromExit = new();
+
   public bool mustBeBuriedInRock = false;
   public bool mustBeExposedToAir = false; //guarantees at least one cell, not all cells
   public bool allowVeinsNearMapEdge = false;
-  public float minSpacingBetweenVeins = 5;
+  public float minSpacingBetweenVeins = 1.5f;
 
   public List<OreWhitelistEntry> oreWhitelist = new();
+
+  private HashSet<IntVec3> ValidCellCache;
 
   public override void Generate(Map map, GenStepParams parms)
   {
@@ -33,7 +39,21 @@ public class GenStep_ScatterOreCavern : GenStep_ScatterLumpsMineable
       Log.Error("CF: config error. both mustBeBurriedInRock and mustBeExposedToAir are set to true, they are mutually exclusive.");
       return;
     }
+    usedSpots.Clear();
+    ValidCellCache = map.AllCells.Where(c => CanScatterAt(c, map)).ToHashSet();
     base.Generate(map, parms);
+    ValidCellCache = null;
+  }
+
+  protected override bool TryFindScatterCell(Map map, out IntVec3 result)
+  {
+    if (nearMapCenter || nearPlayerStart)
+    {
+      return base.TryFindScatterCell(map, out result);
+    }
+
+    return commonalityRatePerCellFromExit.TryPick(map, ValidCellCache, (c, m) => CanScatterAt(c, m), out result)
+      || base.TryFindScatterCell(map, out result);
   }
 
   protected override ThingDef ChooseThingDef()
@@ -65,7 +85,9 @@ public class GenStep_ScatterOreCavern : GenStep_ScatterLumpsMineable
           }
           else
           {
-            return (d.oreDef == null || d.oreDef.building == null || d.oreDef.building.mineableThing == null) ? 0f : d.oreDef.building.mineableScatterCommonality;
+            return (d.oreDef == null || d.oreDef.building == null || d.oreDef.building.mineableThing == null)
+              ? 0f
+              : d.oreDef.building.mineableScatterCommonality;
           }
         },
         out OreWhitelistEntry entry
@@ -96,7 +118,9 @@ public class GenStep_ScatterOreCavern : GenStep_ScatterLumpsMineable
   //we have to re-implement this method to modify the validator
   protected override void ScatterAt(IntVec3 c, Map map, GenStepParams parms, int stackCount = 1)
   {
-    var (thingDef, numCells) = GetLumpDefAndSize();
+    ValidCellCache.Remove(c);
+
+    var (thingDef, numCells) = GetLumpDefAndSize(c);
     if (thingDef == null || numCells == 0)
     {
       return;
@@ -111,6 +135,8 @@ public class GenStep_ScatterOreCavern : GenStep_ScatterLumpsMineable
       GenSpawn.Spawn(thingDef, cell, map);
       caves[cell] = CaveGridUtility.ore;
       recentLumpCells.Add(cell);
+      usedSpots.Add(cell);
+      ValidCellCache.Remove(cell);
     }
 
     bool Validator(IntVec3 cell)
@@ -127,7 +153,7 @@ public class GenStep_ScatterOreCavern : GenStep_ScatterLumpsMineable
             return false;
           }
 
-          return MapGenerator.Caves[cell] == 1f;
+          return CaveGridUtility.IsWorkableRock(caves[cell]);
         }
         return true;
       }
@@ -165,8 +191,9 @@ public class GenStep_ScatterOreCavern : GenStep_ScatterLumpsMineable
     return true;
   }
 
-  private (ThingDef, int) GetLumpDefAndSize()
+  private (ThingDef, int) GetLumpDefAndSize(IntVec3 cell)
   {
+    float ratio = ScattererUtil.FactorAtCell(cell, veinSizeMultPerCellFromExit);
     ThingDef oreDef = ChooseThingDef();
     if (oreDef == null)
     {
@@ -187,14 +214,14 @@ public class GenStep_ScatterOreCavern : GenStep_ScatterLumpsMineable
       {
         //while it isnt the best way to force a lump size (our IntRange is)
         //this doesnt cause any issues so no reason to log
-        return (oreDef, forcedLumpSize);
+        return (oreDef, Mathf.Max(Mathf.RoundToInt(forcedLumpSize * ratio), 1));
       }
       forcedLumpSize = 0;
     }
 
     if (veinSizeOverride.HasValue)
     {
-      return (oreDef, veinSizeOverride.Value.RandomInRange);
+      return (oreDef, Mathf.Max(Mathf.RoundToInt(veinSizeOverride.Value.RandomInRange), 1));
     }
 
     int num = oreDef.building.mineableScatterLumpSizeRange.RandomInRange;
@@ -204,6 +231,6 @@ public class GenStep_ScatterOreCavern : GenStep_ScatterLumpsMineable
     }
 
     float mult = veinSizeMultiplier.Value.RandomInRange;
-    return (oreDef, Math.Max(Mathf.RoundToInt(num * mult), 1));
+    return (oreDef, Math.Max(Mathf.RoundToInt(num * mult * ratio), 1));
   }
 }

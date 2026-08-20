@@ -20,7 +20,7 @@ public class GenStep_ScatterOreCavern : GenStep_ScatterLumpsMineable
   public IntRange? veinSizeOverride;
   public FloatRange? veinSizeMultiplier;
 
-  public RatioConfigCellPicker commonalityRatePerCellFromExit = new();
+  public RatioConfigForRandCell commonalityRatePerCellFromExit = new();
   public RatioConfig veinSizeMultPerCellFromExit = new();
 
   public bool mustBeBuriedInRock = false;
@@ -30,8 +30,6 @@ public class GenStep_ScatterOreCavern : GenStep_ScatterLumpsMineable
 
   public List<OreWhitelistEntry> oreWhitelist = new();
 
-  private HashSet<IntVec3> ValidCellCache;
-
   public override void Generate(Map map, GenStepParams parms)
   {
     if (mustBeBuriedInRock && mustBeExposedToAir)
@@ -39,21 +37,31 @@ public class GenStep_ScatterOreCavern : GenStep_ScatterLumpsMineable
       Log.Error("CF: config error. both mustBeBurriedInRock and mustBeExposedToAir are set to true, they are mutually exclusive.");
       return;
     }
+
+    if (!commonalityRatePerCellFromExit.IsTerminating)
+    {
+      Log.Error("CF: config error. chanceIncreasePerFailedAttempt must be greater than 0, the cell search can't finish without it.");
+      return;
+    }
+
     usedSpots.Clear();
-    ValidCellCache = map.AllCells.Where(c => CanScatterAt(c, map)).ToHashSet();
     base.Generate(map, parms);
-    ValidCellCache = null;
   }
 
   protected override bool TryFindScatterCell(Map map, out IntVec3 result)
   {
-    if (nearMapCenter || nearPlayerStart)
+    while (true)
     {
-      return base.TryFindScatterCell(map, out result);
+      bool found = base.TryFindScatterCell(map, out result);
+      if (!found)
+      {
+        return found;
+      }
+      if (commonalityRatePerCellFromExit.RollBasedOnFactorAtCell(result, map))
+      {
+        return found;
+      }
     }
-
-    return commonalityRatePerCellFromExit.TryPick(map, ValidCellCache, (c, m) => CanScatterAt(c, m), out result)
-      || base.TryFindScatterCell(map, out result);
   }
 
   protected override ThingDef ChooseThingDef()
@@ -118,8 +126,6 @@ public class GenStep_ScatterOreCavern : GenStep_ScatterLumpsMineable
   //we have to re-implement this method to modify the validator
   protected override void ScatterAt(IntVec3 c, Map map, GenStepParams parms, int stackCount = 1)
   {
-    ValidCellCache.Remove(c);
-
     var (thingDef, numCells) = GetLumpDefAndSize(c, map);
     if (thingDef == null || numCells == 0)
     {
@@ -136,7 +142,6 @@ public class GenStep_ScatterOreCavern : GenStep_ScatterLumpsMineable
       caves[cell] = CaveGridUtility.ore;
       recentLumpCells.Add(cell);
       usedSpots.Add(cell);
-      ValidCellCache.Remove(cell);
     }
 
     bool Validator(IntVec3 cell)

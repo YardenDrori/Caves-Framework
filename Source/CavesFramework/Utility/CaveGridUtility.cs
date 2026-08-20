@@ -122,6 +122,6 @@ public static class CaveGridUtility
 
   public static bool IsWorkableRock(float caveGridVal)
   {
-    return IsAnyRock(caveGridVal) && caveGridVal != border;
+    return IsAnyRock(caveGridVal) && caveGridVal != border && caveGridVal != ore;
   }
 }

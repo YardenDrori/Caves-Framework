@@ -20,7 +20,7 @@ public class GenStep_ScatterOreCavern : GenStep_ScatterLumpsMineable
   public IntRange? veinSizeOverride;
   public FloatRange? veinSizeMultiplier;
 
-  public RatioConfigExitDist commonalityRatePerCellFromExit = new();
+  public RatioConfigCellPicker commonalityRatePerCellFromExit = new();
   public RatioConfig veinSizeMultPerCellFromExit = new();
 
   public bool mustBeBuriedInRock = false;

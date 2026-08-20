@@ -44,7 +44,7 @@ public class RatioConfig
   }
 }
 
-public class RatioConfigExitDist : RatioConfig
+public class RatioConfigCellPicker : RatioConfig
 {
   public bool TryPick(Map map, HashSet<IntVec3> candidatesCache, Predicate<IntVec3, Map> validator, out IntVec3 result)
   {

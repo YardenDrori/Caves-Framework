@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using CavesFramework;
 using Verse;
@@ -13,7 +14,7 @@ public class EffectsAtStage
 
   public class MapComponentsOnStageEntry
   {
-    public CustomMapComponent mapComponent;
+    public Type mapComponent;
     public bool removeOnStageEnd = true;
     public bool logOnRemovalFailure = false;
   }
@@ -42,6 +43,11 @@ public class CaveCollapseTimerProperties : CompProperties
   public List<EffectsAtStage> effectsAtStages = new();
 
   public FloatRange daysToCollapse = new FloatRange(3, 3);
+
+  public LetterDef letterDefOnCollapse;
+  public string letterLabel;
+  public string letterDesc;
+  public bool attachDeadColonistInfo = true;
 
   public CaveCollapseTimerProperties()
   {

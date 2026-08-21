@@ -19,7 +19,7 @@ public class EffectsAtStage
   }
 
   public FloatRange startAtCollapsePercentage = new FloatRange(0.0f, 0.0f);
-  public FloatRange? endAtCollapsePercentage = new FloatRange(1f, 1f);
+  public FloatRange endAtCollapsePercentage = new FloatRange(1f, 1f);
 
   public FloatRange screenShakeAmount = new FloatRange(0.1f, 1f);
 

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- TEST CONTENT ONLY. Delete the whole _TestCave folder to remove it. -->
+<Defs>
+
+  <!-- Buildable from Architect > Misc for 1 steel so you can drop one next to
+       the colony and walk in. Dev mode "Try place direct thing" also works. -->
+  <ThingDef ParentName="CF_CaveEntranceBase">
+    <defName>CFTest_CaveEntrance</defName>
+    <label>test cave entrance</label>
+    <description>A hole in the ground leading to a test cavern. Development content.</description>
+    <designationCategory>Misc</designationCategory>
+    <costList>
+      <Steel>1</Steel>
+    </costList>
+    <statBases>
+      <WorkToBuild>1</WorkToBuild>
+    </statBases>
+    <portal Class="CavesFramework.CavePortalProperties">
+      <cave>CF_Cave_Test</cave>
+      <exitDef>CaveExit</exitDef>
+    </portal>
+  </ThingDef>
+
+</Defs>

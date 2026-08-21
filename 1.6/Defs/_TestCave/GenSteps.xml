@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- TEST CONTENT ONLY. Delete the whole _TestCave folder to remove it. -->
+<Defs>
+
+  <!-- ============ CARVING THE CAVE GRID (order 11..199) ============ -->
+  <!-- Runs after ElevationFertility (10, sets elevation to 1 everywhere on
+       underground maps) and before rocks are spawned from the grid (200). -->
+
+  <!-- Every cell starts at 0 (= rock). Punch random holes in it. -->
+  <GenStepDef>
+    <defName>CFTest_DigRandomly</defName>
+    <order>40</order>
+    <genStep Class="CavesFramework.GenStep_DigRandomly">
+      <digPercentage>0.52~0.56</digPercentage>
+    </genStep>
+  </GenStepDef>
+
+  <!-- Lock the map border to solid so the automata can't open the edges. -->
+  <GenStepDef>
+    <defName>CFTest_SetMapEdgesToRock</defName>
+    <order>50</order>
+    <genStep Class="CavesFramework.GenStep_SetMapEdgesToRock">
+      <thickness>3~4</thickness>
+    </genStep>
+  </GenStepDef>
+
+  <!-- Classic 4-5 smoothing rule: turns the noise into blobby caverns. -->
+  <GenStepDef>
+    <defName>CFTest_CellularAutomata</defName>
+    <order>60</order>
+    <genStep Class="CavesFramework.GenStep_CellularAutomata">
+      <iterations>4~5</iterations>
+      <neighborsForEmptyCellToBeWall>5~5</neighborsForEmptyCellToBeWall>
+      <neighborsForFullCellToBeStay>4~4</neighborsForFullCellToBeStay>
+    </genStep>
+  </GenStepDef>
+
+  <!-- Fill in the tiny leftover bubbles nobody can reach. -->
+  <GenStepDef>
+    <defName>CFTest_CloseIsolatedPockets</defName>
+    <order>70</order>
+    <genStep Class="CavesFramework.GenStep_CloseIsolatedPockets">
+      <maxCellCountPocketToClose>40</maxCellCountPocketToClose>
+      <keepMinRegions>1</keepMinRegions>
+    </genStep>
+  </GenStepDef>
+
+  <!-- Tunnel the surviving caverns together so the map is fully walkable. -->
+  <GenStepDef>
+    <defName>CFTest_EnsureCavernRegionsConnection</defName>
+    <order>80</order>
+    <genStep Class="CavesFramework.GenStep_EnsureCavernRegionsConnection">
+      <tunnelWidth>2~5</tunnelWidth>
+      <windiness>6~6</windiness>
+      <narrowingRate>0.01~0.034</narrowingRate>
+    </genStep>
+  </GenStepDef>
+
+  <!-- ============ TURNING THE GRID INTO A MAP ============ -->
+
+  <!-- Spawns rock + roof wherever the grid is solid. Also runs vanilla's
+       nested mineable scatter, so there is background ore before ours. -->
+  <GenStepDef>
+    <defName>CFTest_CaveRocksFromGrid</defName>
+    <order>200</order>
+    <genStep Class="CavesFramework.GenStep_CaveRocksFromGrid">
+      <rockDefsForCave>
+        <li>Limestone</li>
+        <li>Slate</li>
+        <li>Marble</li>
+      </rockDefsForCave>
+    </genStep>
+  </GenStepDef>
+
+  <GenStepDef>
+    <defName>CFTest_CaveTerrain</defName>
+    <order>210</order>
+    <genStep Class="CavesFramework.GenStep_CaveTerrain">
+      <!-- false = floor matches the rock type (limestone/slate/marble floors).
+           true would ask the biome for terrain, and Biome_Underground has no
+           terrainsByFertility, so it errors. -->
+      <useBiomeTerrain>false</useBiomeTerrain>
+    </genStep>
+  </GenStepDef>
+
+  <!-- Places the CaveExit (and the player start spot), then builds the
+       "DistanceFromExit" float grid everything below weights itself by. -->
+  <GenStepDef>
+    <defName>CFTest_CaveExit</defName>
+    <order>400</order>
+    <genStep Class="CavesFramework.GenStep_CavExitWithDistanceGrid">
+      <usePathDistance>true</usePathDistance>
+      <skipCountingRocks>false</skipCountingRocks>
+    </genStep>
+  </GenStepDef>
+
+  <!-- Deeper in = more ore and bigger veins. -->
+  <GenStepDef>
+    <defName>CFTest_ScatterOreCavern</defName>
+    <order>410</order>
+    <genStep Class="CavesFramework.GenStep_ScatterOreCavern">
+      <countPer10kCellsRange>8~12</countPer10kCellsRange>
+      <mustBeExposedToAir>true</mustBeExposedToAir>
+      <minSpacingBetweenVeins>4</minSpacingBetweenVeins>
+      <veinSizeMultiplier>1.0~1.6</veinSizeMultiplier>
+      <commonalityRatePerCellFromExit>
+        <rate>0.02</rate>
+      </commonalityRatePerCellFromExit>
+      <veinSizeMultPerCellFromExit>
+        <rate>0.01</rate>
+      </veinSizeMultPerCellFromExit>
+      <oreWhitelist>
+        <li><oreDef>MineableSteel</oreDef></li>
+        <li><oreDef>MineableSilver</oreDef></li>
+        <li><oreDef>MineableGold</oreDef></li>
+        <li><oreDef>MineableJade</oreDef></li>
+        <li><oreDef>MineablePlasteel</oreDef></li>
+        <li><oreDef>MineableUranium</oreDef></li>
+        <li><oreDef>MineableComponentsIndustrial</oreDef></li>
+      </oreWhitelist>
+    </genStep>
+  </GenStepDef>
+
+</Defs>

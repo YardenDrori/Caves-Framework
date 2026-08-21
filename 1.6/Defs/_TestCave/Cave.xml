@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- TEST CONTENT ONLY. Delete the whole _TestCave folder to remove it. -->
+<Defs>
+
+  <!-- The biome the pocket map runs on. Underground parent = no weather,
+       no wild animals wandering in, no sunlight. -->
+  <BiomeDef ParentName="Biome_Underground">
+    <defName>CFTest_Biome_Cavern</defName>
+    <label>cavern</label>
+    <description>A damp limestone cavern, far below the surface.</description>
+    <constantOutdoorTemperature>12</constantOutdoorTemperature>
+  </BiomeDef>
+
+  <!-- A shape = map dimensions + the exact genStep pipeline for that layout. -->
+  <CavesFramework.CaveShapeDef>
+    <defName>CFTest_Shape_Cavern</defName>
+    <label>test cavern</label>
+    <width>150</width>
+    <height>120</height>
+    <randomizeHeightAndWidth>true</randomizeHeightAndWidth>
+    <genSteps>
+      <!-- vanilla: flattens elevation to 1 underground, rolls fertility noise -->
+      <li>ElevationFertility</li>
+
+      <!-- ours: carve -->
+      <li>CFTest_DigRandomly</li>
+      <li>CFTest_SetMapEdgesToRock</li>
+      <li>CFTest_CellularAutomata</li>
+      <li>CFTest_CloseIsolatedPockets</li>
+      <li>CFTest_EnsureCavernRegionsConnection</li>
+
+      <!-- ours: realise the grid as rock/terrain -->
+      <li>CFTest_CaveRocksFromGrid</li>
+      <li>CFTest_CaveTerrain</li>
+
+      <!-- ours: exit + distance grid, then distance-weighted ore -->
+      <li>CFTest_CaveExit</li>
+      <li>CFTest_ScatterOreCavern</li>
+
+      <!-- vanilla: dressing -->
+      <li>RockChunks</li>
+      <li>Fog</li>
+    </genSteps>
+  </CavesFramework.CaveShapeDef>
+
+  <!-- A cave = the pool of shapes + biomes an entrance rolls from.
+       defName matches the reference already in Defs/Buildings/Building_Misc.xml. -->
+  <CavesFramework.CaveDef>
+    <defName>CF_Cave_Test</defName>
+    <label>test cavern</label>
+    <description>A test cave system used for framework development.</description>
+    <shapes>
+      <li>
+        <shape>CFTest_Shape_Cavern</shape>
+        <shapeWeight>1</shapeWeight>
+      </li>
+    </shapes>
+    <biomes>
+      <li>
+        <biome>CFTest_Biome_Cavern</biome>
+        <biomeWeight>1</biomeWeight>
+      </li>
+    </biomes>
+  </CavesFramework.CaveDef>
+
+</Defs>

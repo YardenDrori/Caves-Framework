@@ -1,0 +1,18 @@
+<Def>
+  <ThingDef Name="CF_CaveExitBase" ParentName="CaveExit">
+    <defName>CF_CaveExit</defName>
+    <label>cave exit</label>
+    <description>A rope line which links to the surface above.</description>
+    <size>(3,3)</size>
+    <thingClass>CaveExit</thingClass>
+    <comps>
+      <li Class="CompProperties_Glower">
+        <glowRadius>10</glowRadius>
+        <glowColor>(140,160,184,0)</glowColor>
+      </li>
+      <li Class="CompProperties_Effecter">
+        <effecterDef>UndercaveMapExitLightshafts</effecterDef>
+      </li>
+    </comps>
+  </ThingDef>
+</Def>

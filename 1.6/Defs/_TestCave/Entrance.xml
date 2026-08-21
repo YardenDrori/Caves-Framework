@@ -17,7 +17,7 @@
     </statBases>
     <portal Class="CavesFramework.CavePortalProperties">
       <cave>CF_Cave_Test</cave>
-      <exitDef>CaveExit</exitDef>
+      <exitDef>CF_CaveExit</exitDef>
     </portal>
   </ThingDef>
 

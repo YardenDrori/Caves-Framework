@@ -17,38 +17,25 @@ public static class CaveGridUtility
   //empty - cant have more types of open space because of the dig method
   public const float emptySpace = 1f;
 
-  // csharpier-ignore
-  public static int NeighborCount(
-    IntVec3 cell,
-    Map map,
-    bool countOutOfBoundsCells,
-    Predicate<IntVec3> match
-  )
+  public static int NeighborCount(IntVec3 cell, Map map, bool countOutOfBoundsCells, Predicate<IntVec3> match)
   {
     int count = 0;
-    for (int x = -1; x <= 1; x++)
+    foreach (var dir in GenAdj.AdjacentCells)
     {
-      for (int z = -1; z <= 1; z++)
+      IntVec3 targetCell = cell + dir;
+
+      if (!targetCell.InBounds(map))
       {
-        if (x == 0 && z == 0) { continue; }
-
-        IntVec3 targetCell = new IntVec3
+        if (countOutOfBoundsCells)
         {
-          x = cell.x + x,
-          y = 0,
-          z = cell.z + z,
-        };
-
-        if (!targetCell.InBounds(map))
-        {
-          if (countOutOfBoundsCells)
-          {
-            count++;
-          }
-          continue;
+          count++;
         }
+        continue;
+      }
 
-        if (match(targetCell)) { count++; }
+      if (match(targetCell))
+      {
+        count++;
       }
     }
     return count;

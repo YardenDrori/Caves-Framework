@@ -175,25 +175,7 @@ public class GenStep_ScatterOreCavern : GenStep_ScatterLumpsMineable
   private bool IsSurroundedByRock(IntVec3 cell, Map map, bool outOfBoundsCountsAsRock)
   {
     MapGenFloatGrid caves = MapGenerator.Caves;
-    IntVec3[] adjacentCells = GenAdj.AdjacentCells; //we care about the corners
-
-    foreach (var offset in adjacentCells)
-    {
-      IntVec3 adjCell = cell + offset;
-
-      if (!adjCell.InBounds(map))
-      {
-        if (outOfBoundsCountsAsRock)
-          continue;
-        return false;
-      }
-
-      if (!CaveGridUtility.IsAnyRock(caves[adjCell]))
-      {
-        return false;
-      }
-    }
-    return true;
+    return CaveGridUtility.NeighborCount(cell, map, outOfBoundsCountsAsRock, c => CaveGridUtility.IsWorkableRock(caves[c])) >= 8;
   }
 
   private (ThingDef, int) GetLumpDefAndSize(IntVec3 cell, Map map)

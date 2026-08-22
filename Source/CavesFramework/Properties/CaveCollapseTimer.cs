@@ -40,14 +40,29 @@ public class EffectsAtStage
 
 public class CaveCollapseTimerProperties : CompProperties
 {
+  public class CollapseLetterOrMessage
+  {
+    public class CollapseNotification
+    {
+      public LetterDef letterDef;
+      public string letterLabel;
+      public string letterDesc;
+
+      public MessageTypeDef messageTypeDef;
+      public string messageToast;
+    }
+
+    public CollapseNotification NoCasualties = new();
+    public CollapseNotification WithCasualties = new();
+  }
+
+  public class MessageDetailsOnCollapseNoLosses { }
+
   public List<EffectsAtStage> effectsAtStages = new();
 
   public FloatRange daysToCollapse = new FloatRange(3, 3);
 
-  public LetterDef letterDefOnCollapse;
-  public string letterLabel;
-  public string letterDesc;
-  public bool attachDeadColonistInfo = true;
+  public CollapseLetterOrMessage letterOrMessageOnCollapse = new();
 
   public CaveCollapseTimerProperties()
   {

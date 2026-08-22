@@ -49,6 +49,7 @@ public class CaveEntrance : MapPortal
     }
     // csharpier-ignore
         return CaveMapUtility.GenerateCave(
+            this,
             new IntVec3(mapWidth, 1, mapHeight),
             GetExtraGenSteps(),
             base.Map,

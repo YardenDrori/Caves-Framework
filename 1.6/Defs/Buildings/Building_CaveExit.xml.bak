@@ -1,6 +1,6 @@
 <Def>
-  <ThingDef Name="CF_CaveExitBase" ParentName="CaveExit">
-    <defName>CF_CaveExit</defName>
+  <ThingDef Name="CF_CavePrimaryExitBase" ParentName="CaveExit">
+    <defName>CF_PrimaryCaveExit</defName>
     <label>cave exit</label>
     <description>A rope line which links to the surface above.</description>
     <size>(3,3)</size>

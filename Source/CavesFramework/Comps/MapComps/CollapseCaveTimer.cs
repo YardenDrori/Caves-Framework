@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
+using RimWorld;
 using UnityEngine;
 using Verse;
 
@@ -53,6 +53,9 @@ public class CompCollapseCaveTimer : CustomMapComponent
   protected int ticksCaveWillBeAlive = -1;
   protected List<TicksPerStage> ticksPerStage = new();
 
+  protected MapPortal overworldPortal;
+  protected MapPortal cavePortal;
+
   protected List<EffectsAtStage> activeStages = new();
 
   public override void FinalizeInit()
@@ -99,18 +102,50 @@ public class CompCollapseCaveTimer : CustomMapComponent
         activeStages.Add(GetEffectFromIndex(ticksPerStage[i].stageIndex));
       }
     }
+
+    if (
+      Props.letterOrMessageOnCollapse.NoCasualties.letterDef != null && Props.letterOrMessageOnCollapse.NoCasualties.messageTypeDef != null
+      || Props.letterOrMessageOnCollapse.WithCasualties.letterDef != null && Props.letterOrMessageOnCollapse.WithCasualties.messageTypeDef != null
+    )
+    {
+      Log.Warning("CF: Both letterDef and messageTypeDef have been set but they are mutually exclusive. Please choose one.");
+    }
+
+    CaveInfo mapInfo = map.GetComponent<CaveInfo>();
+    if (mapInfo == null)
+    {
+      Log.Error("CF: cave map does not have cave info map component.");
+    }
+    else
+    {
+      overworldPortal = mapInfo.portalIntoCave;
+      cavePortal = overworldPortal.exit;
+    }
   }
 
   public override void MapComponentTick()
   {
     base.MapComponentTick();
 
-    //only tick once per TickRare for perf
-    if (Find.TickManager.TicksGame % 250 != 0)
+    HandleEffects();
+
+    //only tick once per TickRare for perf we choose we add the unqiue map id to prevent accidentally
+    //batching all of the components using a similar technique onto one tick and causing lag spikes
+    if ((long)(Find.TickManager.TicksGame + map.uniqueID * 7) % 250 != 0)
     {
       return;
     }
 
+    EnterAndExitStages();
+  }
+
+  protected virtual void HandleEffects()
+  {
+    throw new NotImplementedException();
+  }
+
+  protected virtual void EnterAndExitStages()
+  {
     for (int i = 0; i < ticksPerStage.Count; i++)
     {
       TicksPerStage stage = ticksPerStage[i];
@@ -124,6 +159,11 @@ public class CompCollapseCaveTimer : CustomMapComponent
         ExitStage(GetEffectFromIndex(stage.stageIndex));
         stage.exited = true;
       }
+    }
+
+    if (Find.TickManager.TicksGame >= TickToCollapse)
+    {
+      Collapse();
     }
   }
 
@@ -170,11 +210,96 @@ public class CompCollapseCaveTimer : CustomMapComponent
     }
   }
 
-  protected void Collapse()
+  protected virtual void Collapse()
   {
-    //TODO:
-    //spawn letter
-    throw new NotImplementedException();
+    List<Pawn> pawnsToKill = GetPawnsInCavern();
+    KillPawns(pawnsToKill);
+
+    //TODO: delete pocket map do a buncha sfx and vfx and add a delay until letter pops up
+
+    SpawnLetterOrMessage(pawnsToKill);
+  }
+
+  protected void SpawnLetterOrMessage(List<Pawn> deadPawns)
+  {
+    bool casualties = !deadPawns.NullOrEmpty();
+    if (casualties)
+    {
+      if (Props.letterOrMessageOnCollapse.WithCasualties.letterDef != null)
+      {
+        TaggedString desc = new TaggedString(Props.letterOrMessageOnCollapse.WithCasualties.letterDesc);
+        desc += buildPawnNamesTaggedString(deadPawns);
+        Find.LetterStack.ReceiveLetter(
+          Props.letterOrMessageOnCollapse.WithCasualties.letterLabel,
+          desc,
+          Props.letterOrMessageOnCollapse.WithCasualties.letterDef,
+          new LookTargets(overworldPortal)
+        );
+        return;
+      }
+      Messages.Message(
+        Props.letterOrMessageOnCollapse.WithCasualties.messageToast,
+        new LookTargets(overworldPortal),
+        Props.letterOrMessageOnCollapse.WithCasualties.messageTypeDef,
+        true
+      );
+      return;
+    }
+
+    if (Props.letterOrMessageOnCollapse.NoCasualties.letterDef != null)
+    {
+      Find.LetterStack.ReceiveLetter(
+        Props.letterOrMessageOnCollapse.NoCasualties.letterLabel,
+        Props.letterOrMessageOnCollapse.NoCasualties.letterDesc,
+        Props.letterOrMessageOnCollapse.NoCasualties.letterDef,
+        new LookTargets(overworldPortal)
+      );
+      return;
+    }
+    Messages.Message(
+      Props.letterOrMessageOnCollapse.NoCasualties.messageToast,
+      new LookTargets(overworldPortal),
+      Props.letterOrMessageOnCollapse.NoCasualties.messageTypeDef,
+      true
+    );
+  }
+
+  protected TaggedString buildPawnNamesTaggedString(List<Pawn> pawns)
+  {
+    TaggedString names = new TaggedString();
+    for (int i = 0; i < pawns.Count; i++)
+    {
+      Pawn pawn = pawns[i];
+      names += pawn.NameShortColored;
+      if (i < pawns.Count - 1)
+      {
+        names += ", ";
+      }
+    }
+    return names;
+  }
+
+  protected void KillPawns(List<Pawn> pawnsToBrutallyMurderLol)
+  {
+    DamageInfo murderWith = new DamageInfo(DamageDefOf.Crush, 9999f, 9999f);
+    foreach (Pawn pawn in pawnsToBrutallyMurderLol)
+    {
+      pawn.Kill(murderWith);
+    }
+  }
+
+  protected virtual List<Pawn> GetPawnsInCavern()
+  {
+    List<Pawn> pawns = new();
+    foreach (var pawn in map.mapPawns.AllPawns)
+    {
+      if (!pawn.IsColonist && !pawn.IsPrisonerOfColony)
+      {
+        continue;
+      }
+      pawns.Add(pawn);
+    }
+    return pawns;
   }
 
   public override void ExposeData()

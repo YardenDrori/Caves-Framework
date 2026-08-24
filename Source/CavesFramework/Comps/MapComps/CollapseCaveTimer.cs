@@ -215,45 +215,22 @@ public class CompCollapseCaveTimer : CustomMapComponent
   protected void SpawnLetterOrMessage(List<Pawn> deadPawns)
   {
     bool casualties = !deadPawns.NullOrEmpty();
-    if (casualties)
+    CaveCollapseTimerProperties.CollapseLetterOrMessage.CollapseNotification notification = casualties
+      ? Props.letterOrMessageOnCollapse.withCasualties
+      : Props.letterOrMessageOnCollapse.noCasualties;
+
+    if (notification.IsLetter)
     {
-      if (Props.letterOrMessageOnCollapse.WithCasualties.letterDef != null)
+      TaggedString desc = new TaggedString(notification.letterDesc);
+      if (casualties)
       {
-        TaggedString desc = new TaggedString(Props.letterOrMessageOnCollapse.WithCasualties.letterDesc);
         desc += buildPawnNamesTaggedString(deadPawns);
-        Find.LetterStack.ReceiveLetter(
-          Props.letterOrMessageOnCollapse.WithCasualties.letterLabel,
-          desc,
-          Props.letterOrMessageOnCollapse.WithCasualties.letterDef,
-          new LookTargets(overworldPortal)
-        );
-        return;
       }
-      Messages.Message(
-        Props.letterOrMessageOnCollapse.WithCasualties.messageToast,
-        new LookTargets(overworldPortal),
-        Props.letterOrMessageOnCollapse.WithCasualties.messageTypeDef,
-        true
-      );
+      Find.LetterStack.ReceiveLetter(notification.letterLabel, desc, notification.letterDef, new LookTargets(overworldPortal));
       return;
     }
 
-    if (Props.letterOrMessageOnCollapse.NoCasualties.letterDef != null)
-    {
-      Find.LetterStack.ReceiveLetter(
-        Props.letterOrMessageOnCollapse.NoCasualties.letterLabel,
-        Props.letterOrMessageOnCollapse.NoCasualties.letterDesc,
-        Props.letterOrMessageOnCollapse.NoCasualties.letterDef,
-        new LookTargets(overworldPortal)
-      );
-      return;
-    }
-    Messages.Message(
-      Props.letterOrMessageOnCollapse.NoCasualties.messageToast,
-      new LookTargets(overworldPortal),
-      Props.letterOrMessageOnCollapse.NoCasualties.messageTypeDef,
-      true
-    );
+    Messages.Message(notification.messageToast, new LookTargets(overworldPortal), notification.messageTypeDef, true);
   }
 
   protected TaggedString buildPawnNamesTaggedString(List<Pawn> pawns)

@@ -10,6 +10,7 @@ public class CaveInfo : CustomMapComponent
   public BiomeDef biomeDef;
   public CaveDef caveDef;
   public List<TileMutatorDef> mutators;
+  public List<ThingDef> rockDefs;
   public CaveEntrance portalIntoCave;
 
   public override void ExposeData()

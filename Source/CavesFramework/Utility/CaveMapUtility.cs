@@ -45,11 +45,14 @@ public static class CaveMapUtility
           Log.Error("CF: failed to fetch CaveInfo component from newly created cave.");
           return;
         }
-        caveInfo.biomeDef = biomeDef;
-        caveInfo.caveDef = caveDef;
-        caveInfo.caveShapeDef = caveShapeDef;
-        caveInfo.mutators = mutators;
-        caveInfo.portalIntoCave = CreatorPortal;
+        else
+        {
+          caveInfo.biomeDef = biomeDef;
+          caveInfo.caveDef = caveDef;
+          caveInfo.caveShapeDef = caveShapeDef;
+          caveInfo.mutators = mutators;
+          caveInfo.portalIntoCave = CreatorPortal;
+        }
       },
       isPocketMap: true
     );

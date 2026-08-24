@@ -58,6 +58,9 @@ public class CompCollapseCaveTimer : CustomMapComponent
 
   protected List<EffectsAtStage> activeStages = new();
 
+  public CompCollapseCaveTimer(Map map)
+    : base(map) { }
+
   public override void FinalizeInit()
   {
     base.FinalizeInit();
@@ -119,7 +122,9 @@ public class CompCollapseCaveTimer : CustomMapComponent
   {
     base.MapComponentTick();
 
-    HandleEffects();
+    HandleVFX();
+    HandleSFX();
+    HandleCaveIn();
 
     //only tick once per TickRare for perf we choose we add the unqiue map id to prevent accidentally
     //batching all of the components using a similar technique onto one tick and causing lag spikes
@@ -131,7 +136,17 @@ public class CompCollapseCaveTimer : CustomMapComponent
     EnterAndExitStages();
   }
 
-  protected virtual void HandleEffects()
+  protected virtual void HandleVFX()
+  {
+    throw new NotImplementedException();
+  }
+
+  protected virtual void HandleSFX()
+  {
+    throw new NotImplementedException();
+  }
+
+  protected virtual void HandleCaveIn()
   {
     throw new NotImplementedException();
   }
@@ -224,7 +239,7 @@ public class CompCollapseCaveTimer : CustomMapComponent
       TaggedString desc = new TaggedString(notification.letterDesc);
       if (casualties)
       {
-        desc += buildPawnNamesTaggedString(deadPawns);
+        desc += BuildPawnNamesTaggedString(deadPawns);
       }
       Find.LetterStack.ReceiveLetter(notification.letterLabel, desc, notification.letterDef, new LookTargets(overworldPortal));
       return;
@@ -233,7 +248,7 @@ public class CompCollapseCaveTimer : CustomMapComponent
     Messages.Message(notification.messageToast, new LookTargets(overworldPortal), notification.messageTypeDef, true);
   }
 
-  protected TaggedString buildPawnNamesTaggedString(List<Pawn> pawns)
+  protected TaggedString BuildPawnNamesTaggedString(List<Pawn> pawns)
   {
     TaggedString names = new TaggedString();
     for (int i = 0; i < pawns.Count; i++)
@@ -284,7 +299,4 @@ public class CompCollapseCaveTimer : CustomMapComponent
       ticksPerStage ??= new();
     }
   }
-
-  public CompCollapseCaveTimer(Map map)
-    : base(map) { }
 }

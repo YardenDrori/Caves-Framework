@@ -103,14 +103,6 @@ public class CompCollapseCaveTimer : CustomMapComponent
       }
     }
 
-    if (
-      Props.letterOrMessageOnCollapse.NoCasualties.letterDef != null && Props.letterOrMessageOnCollapse.NoCasualties.messageTypeDef != null
-      || Props.letterOrMessageOnCollapse.WithCasualties.letterDef != null && Props.letterOrMessageOnCollapse.WithCasualties.messageTypeDef != null
-    )
-    {
-      Log.Warning("CF: Both letterDef and messageTypeDef have been set but they are mutually exclusive. Please choose one.");
-    }
-
     CaveInfo mapInfo = map.GetComponent<CaveInfo>();
     if (mapInfo == null)
     {

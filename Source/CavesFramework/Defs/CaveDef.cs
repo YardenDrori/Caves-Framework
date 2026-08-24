@@ -42,4 +42,22 @@ public class CaveDef : Def
   public CaveCollapseTimerProperties collapseTimerProps;
 
   public bool disableShadows = true;
+
+  public override IEnumerable<string> ConfigErrors()
+  {
+    foreach (string error in base.ConfigErrors())
+    {
+      yield return error;
+    }
+
+    if (collapseTimerProps == null)
+    {
+      yield break;
+    }
+
+    foreach (string error in collapseTimerProps.ConfigErrors())
+    {
+      yield return error;
+    }
+  }
 }

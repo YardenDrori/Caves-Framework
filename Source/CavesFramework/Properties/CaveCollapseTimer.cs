@@ -14,6 +14,17 @@ public class StageTiming
 
 public class EffectsAtStage
 {
+  public class VisualEffect
+  {
+    public SimpleCurve intervalCurve;
+    public FloatRange spawnCountPer10kEmptyCells = new FloatRange(1, 1);
+    public IntRange ticksToLive = new IntRange(15, 120);
+    public EffecterDef effect;
+    public List<SubEffecterDef> subEffectors = new();
+    public float scale = 1f;
+    public bool warnOnFail = false;
+  }
+
   public class LetterOnStageEntry
   {
     public LetterDef letterDef;
@@ -37,7 +48,6 @@ public class EffectsAtStage
     };
 
     // set to 0 to ignore cave
-    public float countScalePer10kAirCells = 1f;
 
     public float maxAirCellFraction = 0.85f;
 
@@ -63,10 +73,11 @@ public class EffectsAtStage
   public FloatRange screenShakeAmount = new FloatRange(0.1f, 1f);
   public SimpleCurve screenShakeIntervalCurve = new SimpleCurve { { 0f, 10f }, { 1f, 5f } };
 
+  //TODO: overhaul similarly to VisualEffect
   public List<SoundDef> soundsToPlay = new();
   public StageTiming soundTiming = new(); //leave empty to sync with screen shake
-  public List<EffecterDef> effectsToPlay = new();
-  public StageTiming effectTiming = new(); // leave empty to sync with screen shake x2
+
+  public List<VisualEffect> VisualEffects = new();
 
   // rockfall enabled by default set <caveInParams IsNull="True" /> to disable
   public CaveInParams caveInParams = new();

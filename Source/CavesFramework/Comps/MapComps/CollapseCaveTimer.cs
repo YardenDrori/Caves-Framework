@@ -41,22 +41,76 @@ public class CompCollapseCaveTimer : CustomMapComponent
     }
   }
 
+  //getters
+  public int TicksPassedSinceSpawn => Find.TickManager.TicksGame - tickSpawned;
+  public int TickToCollapse => tickSpawned + ticksCaveWillBeAlive;
   private CaveCollapseTimerProperties _cachedProps;
   public CaveCollapseTimerProperties Props => _cachedProps ??= map.GetComponent<CaveInfo>()?.caveDef?.collapseTimerProps;
 
-  public int TicksPassedSinceSpawn => Find.TickManager.TicksGame - tickSpawned;
-  public int TickToCollapse => tickSpawned + ticksCaveWillBeAlive;
-
-  public EffectsAtStage GetEffectFromIndex(int index) => Props.effectsAtStages[index];
-
+  //shit we expose
   protected int tickSpawned = -1;
   protected int ticksCaveWillBeAlive = -1;
   protected List<TicksPerStage> ticksPerStage = new();
 
+  //shit we derive on load
   protected MapPortal overworldPortal;
   protected MapPortal cavePortal;
-
   protected List<EffectsAtStage> activeStages = new();
+
+  //utils
+  public EffectsAtStage GetEffectFromIndex(int index) => Props.effectsAtStages[index];
+
+  private List<IntVec3> emptyCellsCache;
+  private int emptyCellCursor;
+
+  protected List<IntVec3> EmptyCells
+  {
+    get
+    {
+      if (emptyCellsCache == null)
+      {
+        emptyCellsCache = new List<IntVec3>();
+        foreach (IntVec3 cell in map.cellsInRandomOrder.GetAll())
+        {
+          if (CellIsEmpty(cell))
+          {
+            emptyCellsCache.Add(cell);
+          }
+        }
+      }
+      return emptyCellsCache;
+    }
+  }
+
+  private bool CellIsEmpty(IntVec3 cell)
+  {
+    Building edifice = cell.GetEdifice(map);
+    return edifice == null || edifice.def.Fillage != FillCategory.Full;
+  }
+
+  // walks the pre-shuffled cell list with a wrapping cursor. no Rand call per tick, even coverage
+  // of the map, and cells repeat naturally once we wrap around. returns Invalid if nothing is open.
+  protected IntVec3 NextEmptyCell()
+  {
+    List<IntVec3> cells = EmptyCells;
+
+    // the cached list goes stale as cave-ins fill cells in, so re-check whatever we hand out.
+    // worst case we scan the whole list, but that only happens once the cave is fully filled.
+    for (int i = 0; i < cells.Count; i++)
+    {
+      if (emptyCellCursor >= cells.Count)
+      {
+        emptyCellCursor = 0;
+      }
+      IntVec3 cell = cells[emptyCellCursor++];
+      if (CellIsEmpty(cell))
+      {
+        return cell;
+      }
+    }
+    return IntVec3.Invalid;
+  }
+
 
   public CompCollapseCaveTimer(Map map)
     : base(map) { }
@@ -138,7 +192,24 @@ public class CompCollapseCaveTimer : CustomMapComponent
 
   protected virtual void HandleVFX()
   {
-    throw new NotImplementedException();
+    foreach (EffectsAtStage stage in activeStages)
+    {
+      foreach (EffectsAtStage.VisualEffect effect in stage.VisualEffects)
+      {
+        IntVec3 cellToSpawn = NextEmptyCell();
+        if (!cellToSpawn.IsValid)
+        {
+          if (effect.warnOnFail)
+          {
+            Log.Warning("CF: Failed to spawn effect " + effect.effect.defName + ", no valid cell was found.");
+          }
+          continue;
+        }
+
+        //TODO: spawn the maintained effecter at cellToSpawn and tick/clean it up
+        //(needs effect.ticksToLive, effect.scale, effect.subEffectors, effect.intervalCurve)
+      }
+    }
   }
 
   protected virtual void HandleSFX()

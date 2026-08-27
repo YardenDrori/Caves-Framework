@@ -4,27 +4,8 @@ using Verse;
 
 namespace CavesFramework;
 
-public class StageTiming
-{
-  // x = fraction of the way through this stage (0..1), y = seconds between triggers.
-  // leave null to sync witn camera shake
-  public SimpleCurve intervalCurve;
-  public IntRange countPerTrigger = new IntRange(1, 1);
-}
-
 public class EffectsAtStage
 {
-  public class VisualEffect
-  {
-    public SimpleCurve intervalCurve;
-    public FloatRange spawnCountPer10kEmptyCells = new FloatRange(1, 1);
-    public IntRange ticksToLive = new IntRange(15, 120);
-    public EffecterDef effect;
-    public List<SubEffecterDef> subEffectors = new();
-    public float scale = 1f;
-    public bool warnOnFail = false;
-  }
-
   public class LetterOnStageEntry
   {
     public LetterDef letterDef;
@@ -32,6 +13,7 @@ public class EffectsAtStage
     public string letterDesc;
   }
 
+  // hook for added behavior and a buncha shit for instance adding visual effects
   public class MapComponentsOnStageEntry
   {
     public Type mapComponent;
@@ -41,13 +23,8 @@ public class EffectsAtStage
 
   public class CaveInParams
   {
-    public StageTiming timing = new StageTiming
-    {
-      intervalCurve = new SimpleCurve { { 0f, 12f }, { 1f, 2f } },
-      countPerTrigger = new IntRange(1, 3),
-    };
-
-    // set to 0 to ignore cave
+    public SimpleCurve intervalCurve = new SimpleCurve { { 0f, 12f }, { 1f, 2f } };
+    public IntRange countPerTrigger = new IntRange(1, 3);
 
     public float maxAirCellFraction = 0.85f;
 
@@ -70,21 +47,18 @@ public class EffectsAtStage
   public FloatRange startAtCollapsePercentage = new FloatRange(0.0f, 0.0f);
   public FloatRange endAtCollapsePercentage = new FloatRange(1f, 1f);
 
-  public FloatRange screenShakeAmount = new FloatRange(0.1f, 1f);
-  public SimpleCurve screenShakeIntervalCurve = new SimpleCurve { { 0f, 10f }, { 1f, 5f } };
-
-  //TODO: overhaul similarly to VisualEffect
-  public List<SoundDef> soundsToPlay = new();
-  public StageTiming soundTiming = new(); //leave empty to sync with screen shake
-
-  public List<VisualEffect> VisualEffects = new();
-
   // rockfall enabled by default set <caveInParams IsNull="True" /> to disable
   public CaveInParams caveInParams = new();
 
   public LetterOnStageEntry letterOnStageEntry;
 
   public List<MapComponentsOnStageEntry> mapComponentsToAdd = new();
+
+  //TODO
+  public IEnumerable<string> ConfigErrors()
+  {
+    yield break;
+  }
 }
 
 public class CaveCollapseTimerProperties

@@ -88,14 +88,11 @@ public class CompCollapseCaveTimer : CustomMapComponent
     return edifice == null || edifice.def.Fillage != FillCategory.Full;
   }
 
-  // walks the pre-shuffled cell list with a wrapping cursor. no Rand call per tick, even coverage
-  // of the map, and cells repeat naturally once we wrap around. returns Invalid if nothing is open.
   protected IntVec3 NextEmptyCell()
   {
     List<IntVec3> cells = EmptyCells;
 
-    // the cached list goes stale as cave-ins fill cells in, so re-check whatever we hand out.
-    // worst case we scan the whole list, but that only happens once the cave is fully filled.
+    // we still check incase the cache is stale
     for (int i = 0; i < cells.Count; i++)
     {
       if (emptyCellCursor >= cells.Count)
@@ -110,7 +107,6 @@ public class CompCollapseCaveTimer : CustomMapComponent
     }
     return IntVec3.Invalid;
   }
-
 
   public CompCollapseCaveTimer(Map map)
     : base(map) { }
@@ -176,8 +172,6 @@ public class CompCollapseCaveTimer : CustomMapComponent
   {
     base.MapComponentTick();
 
-    HandleVFX();
-    HandleSFX();
     HandleCaveIn();
 
     //only tick once per TickRare for perf we choose we add the unqiue map id to prevent accidentally
@@ -190,37 +184,8 @@ public class CompCollapseCaveTimer : CustomMapComponent
     EnterAndExitStages();
   }
 
-  protected virtual void HandleVFX()
-  {
-    foreach (EffectsAtStage stage in activeStages)
-    {
-      foreach (EffectsAtStage.VisualEffect effect in stage.VisualEffects)
-      {
-        IntVec3 cellToSpawn = NextEmptyCell();
-        if (!cellToSpawn.IsValid)
-        {
-          if (effect.warnOnFail)
-          {
-            Log.Warning("CF: Failed to spawn effect " + effect.effect.defName + ", no valid cell was found.");
-          }
-          continue;
-        }
-
-        //TODO: spawn the maintained effecter at cellToSpawn and tick/clean it up
-        //(needs effect.ticksToLive, effect.scale, effect.subEffectors, effect.intervalCurve)
-      }
-    }
-  }
-
-  protected virtual void HandleSFX()
-  {
-    throw new NotImplementedException();
-  }
-
-  protected virtual void HandleCaveIn()
-  {
-    throw new NotImplementedException();
-  }
+  //TODO: implement rockfall using Props.effectsAtStages[..].caveInParams
+  protected virtual void HandleCaveIn() { }
 
   protected virtual void EnterAndExitStages()
   {

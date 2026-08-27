@@ -115,6 +115,14 @@ public static class CaveMapUtility
     List<Type> compsToAdd = new List<Type>();
     compsToAdd.AddRange(fixedGeneratorDef.customMapComponents);
     compsToAdd.AddRange(caveShapeDef.customMapComponents);
+
+    //the timer only makes sense on caves that actually collapse, and attaching it without props
+    //would leave it with no collapse tick to count towards
+    if (caveDef.collapseTimerProps != null)
+    {
+      compsToAdd.Add(typeof(CompCollapseCaveTimer));
+    }
+
     fixedGeneratorDef.customMapComponents = compsToAdd.Distinct().ToList();
 
     fixedGeneratorDef.ignoreAreaRevealedLetter = true;

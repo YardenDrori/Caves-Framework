@@ -69,6 +69,7 @@ public class CaveInfo : CustomMapComponent
       {
         return true;
       }
+      //remove it to be rebuilt as if we hit this the caches sucks ass
       randCellsCacheByKey.Remove(cacheKey);
     }
 

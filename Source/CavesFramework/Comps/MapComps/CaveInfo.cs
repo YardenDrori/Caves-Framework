@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using RimWorld;
 using Verse;
 
@@ -80,16 +81,22 @@ public class CaveInfo : CustomMapComponent
 
     for (int i = 0; i < map.Area; i++)
     {
-      IntVec3 cell = randMapCells.Get(i);
-      if (!validator(cell))
-        continue;
-
       if (cache == null)
       {
+        //this is what we call in the industry... good enough
+        IntVec3 cell = randMapCells.Get(Rand.RangeInclusive(0, map.Area - 1));
+        if (!validator(cell))
+          continue;
         result = cell;
         return true;
       }
-      cache.cells.Add(cell);
+      else
+      {
+        IntVec3 cell = randMapCells.Get(i);
+        if (!validator(cell))
+          continue;
+        cache.cells.Add(cell);
+      }
     }
 
     //if the cahce is empty then we went through the entire map finding nothing
@@ -102,10 +109,21 @@ public class CaveInfo : CustomMapComponent
     if (cache.cells.Count < 1)
     {
       result = IntVec3.Invalid;
+      randCellsCacheByKey.Remove(cacheKey);
       return false;
     }
 
     result = cache.cells[cache.index++];
+    return true;
+  }
+
+  public bool NotSolidPredicate(IntVec3 c)
+  {
+    Building edifice = c.GetEdifice(map);
+    if (edifice != null && edifice.def.Fillage == FillCategory.Full)
+    {
+      return false;
+    }
     return true;
   }
 
@@ -117,7 +135,7 @@ public class CaveInfo : CustomMapComponent
       {
         cache.index = 0;
         cache.wrapsUntilStale--;
-        if (cache.wrapsUntilStale == 0)
+        if (cache.wrapsUntilStale <= 0)
         {
           randCellsCacheByKey.Remove(cacheKey);
           result = IntVec3.Invalid;

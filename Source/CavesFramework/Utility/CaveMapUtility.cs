@@ -116,8 +116,10 @@ public static class CaveMapUtility
     compsToAdd.AddRange(fixedGeneratorDef.customMapComponents);
     compsToAdd.AddRange(caveShapeDef.customMapComponents);
 
-    //the timer only makes sense on caves that actually collapse, and attaching it without props
-    //would leave it with no collapse tick to count towards
+    if (biomeDef.HasModExtension<CaveEffects>())
+    {
+      compsToAdd.Add(typeof(CaveEffectsHandler));
+    }
     if (caveDef.collapseTimerProps != null)
     {
       compsToAdd.Add(typeof(CompCollapseCaveTimer));

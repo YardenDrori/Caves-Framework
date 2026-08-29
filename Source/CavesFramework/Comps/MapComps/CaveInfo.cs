@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using RimWorld;
 using Verse;
@@ -41,6 +42,101 @@ public class CaveInfo : CustomMapComponent
 
       base.map.generatorDef = fixedGeneratorDef;
     }
+  }
+
+  private class RandcellsCache
+  {
+    public List<IntVec3> cells;
+    public int index;
+    public int wrapsUntilStale;
+
+    public RandcellsCache(List<IntVec3> cells, int wrapsUntilStale = 10)
+    {
+      this.cells = cells;
+      this.wrapsUntilStale = wrapsUntilStale;
+      index = 0;
+    }
+  }
+
+  private Dictionary<string, RandcellsCache> randCellsCacheByKey = new();
+
+  public bool TryGetRandomCell(Predicate<IntVec3> validator, string cacheKey, out IntVec3 result)
+  {
+    if (cacheKey != null && randCellsCacheByKey.TryGetValue(cacheKey, out RandcellsCache existingCache))
+    {
+      if (TryGetRandCellFromCache(existingCache, cacheKey, validator, out result))
+      {
+        return true;
+      }
+      randCellsCacheByKey.Remove(cacheKey);
+    }
+
+    MapCellsInRandomOrder randMapCells = map.cellsInRandomOrder;
+    RandcellsCache cache = cacheKey != null ? new(new List<IntVec3>()) : null;
+    if (cache != null)
+    {
+      randCellsCacheByKey.Add(cacheKey, cache);
+    }
+
+    for (int i = 0; i < map.Area; i++)
+    {
+      IntVec3 cell = randMapCells.Get(i);
+      if (!validator(cell))
+        continue;
+
+      if (cache == null)
+      {
+        result = cell;
+        return true;
+      }
+      cache.cells.Add(cell);
+    }
+
+    //if the cahce is empty then we went through the entire map finding nothing
+    if (cache == null)
+    {
+      result = IntVec3.Invalid;
+      return false;
+    }
+    //if the cache isnt empty but has no values then again we wnt through the entire map finding nothing
+    if (cache.cells.Count < 1)
+    {
+      result = IntVec3.Invalid;
+      return false;
+    }
+
+    result = cache.cells[cache.index++];
+    return true;
+  }
+
+  private bool TryGetRandCellFromCache(RandcellsCache cache, string cacheKey, Predicate<IntVec3> validator, out IntVec3 result)
+  {
+    while (cache.cells.Count > 0)
+    {
+      if (cache.index >= cache.cells.Count)
+      {
+        cache.index = 0;
+        cache.wrapsUntilStale--;
+        if (cache.wrapsUntilStale == 0)
+        {
+          randCellsCacheByKey.Remove(cacheKey);
+          result = IntVec3.Invalid;
+          return false;
+        }
+      }
+
+      if (!validator(cache.cells[cache.index]))
+      {
+        cache.cells.RemoveAt(cache.index);
+        continue;
+      }
+
+      result = cache.cells[cache.index];
+      cache.index++;
+      return true;
+    }
+    result = IntVec3.Invalid;
+    return false;
   }
 
   public CaveInfo(Map map)

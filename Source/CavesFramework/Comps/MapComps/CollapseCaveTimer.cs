@@ -159,7 +159,7 @@ public class CompCollapseCaveTimer : CustomMapComponent
     CaveInfo mapInfo = map.GetComponent<CaveInfo>();
     if (mapInfo == null)
     {
-      Log.Error("CF: cave map does not have cave info map component.");
+      Log.Error("CF: cave map does not have cave info mod extension.");
     }
     else
     {

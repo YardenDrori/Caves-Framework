@@ -45,13 +45,13 @@ public class CaveInfo : CustomMapComponent
     }
   }
 
-  private class RandcellsCache
+  private class RandCellsCache
   {
     public List<IntVec3> cells;
     public int index;
     public int wrapsUntilStale;
 
-    public RandcellsCache(List<IntVec3> cells, int wrapsUntilStale = 10)
+    public RandCellsCache(List<IntVec3> cells, int wrapsUntilStale = 10)
     {
       this.cells = cells;
       this.wrapsUntilStale = wrapsUntilStale;
@@ -59,54 +59,41 @@ public class CaveInfo : CustomMapComponent
     }
   }
 
-  private Dictionary<string, RandcellsCache> randCellsCacheByKey = new();
+  private Dictionary<string, RandCellsCache> randCellsCacheByKey = new();
+
+  public bool TryGetCellCountForRandCellsCache(string cacheKey, Predicate<IntVec3> validator, out int cellCount)
+  {
+    RandCellsCache cache = EnsureRandCellsCache(cacheKey, validator);
+    cellCount = cache.cells.Count;
+    return cellCount > 0;
+  }
 
   public bool TryGetRandomCell(Predicate<IntVec3> validator, string cacheKey, out IntVec3 result)
   {
-    if (cacheKey != null && randCellsCacheByKey.TryGetValue(cacheKey, out RandcellsCache existingCache))
+    if (cacheKey != null && randCellsCacheByKey.TryGetValue(cacheKey, out RandCellsCache existingCache))
     {
       if (TryGetRandCellFromCache(existingCache, cacheKey, validator, out result))
-      {
         return true;
-      }
-      //remove it to be rebuilt as if we hit this the caches sucks ass
+
       randCellsCacheByKey.Remove(cacheKey);
     }
 
-    MapCellsInRandomOrder randMapCells = map.cellsInRandomOrder;
-    RandcellsCache cache = cacheKey != null ? new(new List<IntVec3>()) : null;
-    if (cache != null)
+    if (cacheKey == null)
     {
-      randCellsCacheByKey.Add(cacheKey, cache);
-    }
-
-    for (int i = 0; i < map.Area; i++)
-    {
-      if (cache == null)
+      MapCellsInRandomOrder randMapCells = map.cellsInRandomOrder;
+      for (int i = 0; i < map.Area; i++)
       {
-        //this is what we call in the industry... good enough
         IntVec3 cell = randMapCells.Get(Rand.RangeInclusive(0, map.Area - 1));
         if (!validator(cell))
           continue;
         result = cell;
         return true;
       }
-      else
-      {
-        IntVec3 cell = randMapCells.Get(i);
-        if (!validator(cell))
-          continue;
-        cache.cells.Add(cell);
-      }
-    }
-
-    //if the cahce is empty then we went through the entire map finding nothing
-    if (cache == null)
-    {
       result = IntVec3.Invalid;
       return false;
     }
-    //if the cache isnt empty but has no values then again we wnt through the entire map finding nothing
+
+    RandCellsCache cache = EnsureRandCellsCache(cacheKey, validator);
     if (cache.cells.Count < 1)
     {
       result = IntVec3.Invalid;
@@ -128,7 +115,26 @@ public class CaveInfo : CustomMapComponent
     return true;
   }
 
-  private bool TryGetRandCellFromCache(RandcellsCache cache, string cacheKey, Predicate<IntVec3> validator, out IntVec3 result)
+  private RandCellsCache EnsureRandCellsCache(string cacheKey, Predicate<IntVec3> validator)
+  {
+    if (randCellsCacheByKey.TryGetValue(cacheKey, out RandCellsCache cache))
+      return cache;
+
+    MapCellsInRandomOrder randMapCells = map.cellsInRandomOrder;
+    List<IntVec3> cells = new List<IntVec3>();
+    for (int i = 0; i < map.Area; i++)
+    {
+      IntVec3 cell = randMapCells.Get(i);
+      if (validator(cell))
+        cells.Add(cell);
+    }
+
+    cache = new RandCellsCache(cells);
+    randCellsCacheByKey[cacheKey] = cache;
+    return cache;
+  }
+
+  private bool TryGetRandCellFromCache(RandCellsCache cache, string cacheKey, Predicate<IntVec3> validator, out IntVec3 result)
   {
     while (cache.cells.Count > 0)
     {

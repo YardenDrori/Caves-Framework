@@ -174,14 +174,10 @@ public class CompCollapseCaveTimer : CustomMapComponent
 
     HandleCaveIn();
 
-    //only tick once per TickRare for perf we choose we add the unqiue map id to prevent accidentally
-    //batching all of the components using a similar technique onto one tick and causing lag spikes
-    if ((long)(Find.TickManager.TicksGame + map.uniqueID * 7) % 250 != 0)
+    if (map.IsHashIntervalTick(250, 0))
     {
-      return;
+      EnterAndExitStages();
     }
-
-    EnterAndExitStages();
   }
 
   //TODO: implement rockfall using Props.effectsAtStages[..].caveInParams

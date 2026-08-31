@@ -21,7 +21,7 @@ public class EffectsAtStage
     public bool logOnRemovalFailure = false;
   }
 
-  public class CaveInParams
+  public class CaveInConfig
   {
     public float mtbHoursPerTrigger = 1f;
     public IntRange countPerTrigger = new IntRange(1, 3);
@@ -48,7 +48,7 @@ public class EffectsAtStage
   public FloatRange endAtCollapsePercentage = new FloatRange(1f, 1f);
 
   // rockfall enabled by default set <caveInParams IsNull="True" /> to disable
-  public CaveInParams caveInParams = new();
+  public CaveInConfig caveInConfig = new();
 
   public LetterOnStageEntry letterOnStageEntry;
 
@@ -116,44 +116,44 @@ public class EffectsAtStage
       yield return "startAtCollapsePercentage's max and endAtCollapsePercentage's min value intersect.";
     }
 
-    if (caveInParams != null)
+    if (caveInConfig != null)
     {
-      if (caveInParams.countPerTrigger.max < caveInParams.countPerTrigger.min)
+      if (caveInConfig.countPerTrigger.max < caveInConfig.countPerTrigger.min)
       {
         yield return "caveInParams.countPerTrigger's max value is lesser than its min.";
       }
-      if (caveInParams.countPerTrigger.min < 1)
+      if (caveInConfig.countPerTrigger.min < 1)
       {
         yield return "caveInParams.countPerTrigger's min value is lesser than 1.";
       }
 
-      if (caveInParams.distanceFromWalls.max < caveInParams.distanceFromWalls.min)
+      if (caveInConfig.distanceFromWalls.max < caveInConfig.distanceFromWalls.min)
       {
         yield return "caveInParams.distanceFromWalls's max value is lesser than its min.";
       }
-      if (caveInParams.distanceFromWalls.min < 0)
+      if (caveInConfig.distanceFromWalls.min < 0)
       {
         yield return "caveInParams.distanceFromWalls's min value cannot be negative.";
       }
 
-      if (caveInParams.maxAirCellsToFillFraction <= 0)
+      if (caveInConfig.maxAirCellsToFillFraction <= 0)
       {
         yield return "caveInParams.maxAirCellsToFillFraction's value is lesser than 0, the range is 0~1.";
       }
-      if (caveInParams.maxAirCellsToFillFraction > 1)
+      if (caveInConfig.maxAirCellsToFillFraction > 1)
       {
         yield return "caveInParams.maxAirCellsToFillFraction's value is greater than 1, the range is 0~1.";
       }
 
-      if (caveInParams.minCellDistanceFromExit < 0)
+      if (caveInConfig.minCellDistanceFromExit < 0)
       {
         yield return "caveInParams.minCellDistanceFromExit's value cannot be negative.";
       }
-      if (caveInParams.mtbHoursPerTrigger <= 0)
+      if (caveInConfig.mtbHoursPerTrigger <= 0)
       {
         yield return "caveInParams.mtbHoursPerTrigger's value must be greater than 0.";
       }
-      if (caveInParams.naturalRockWeight < 0)
+      if (caveInConfig.naturalRockWeight < 0)
       {
         yield return "caveInParams.naturalRockWeight's value cannot be negative.";
       }

@@ -44,8 +44,8 @@ public class EffectsAtStage
     public SoundDef caveInSound;
   }
 
-  public FloatRange startAtCollapsePercentage = new FloatRange(0.0f, 0.0f);
-  public FloatRange endAtCollapsePercentage = new FloatRange(1f, 1f);
+  public float startAtCollapsePercentage = 0f;
+  public float endAtCollapsePercentage = 1f;
 
   // rockfall enabled by default set <caveInParams IsNull="True" /> to disable
   public CaveInConfig caveInConfig = new();
@@ -61,6 +61,19 @@ public class EffectsAtStage
 
   public IEnumerable<string> ConfigErrors()
   {
+    if (startAtCollapsePercentage >= endAtCollapsePercentage)
+    {
+      yield return "start collapse percentage is not lesser than end at collapse percentage.";
+    }
+    if (startAtCollapsePercentage < 0)
+    {
+      yield return "start at collapse percentage is a negative value.";
+    }
+    if (endAtCollapsePercentage > 1)
+    {
+      yield return "end at collapse percentage is a value greater than 1. 1 is equivalent to 100%";
+    }
+
     foreach (var comp in mapComponentsToAdd)
     {
       if (comp.mapComponent == null)

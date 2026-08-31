@@ -8,7 +8,7 @@ namespace CavesFramework;
 public class CaveEffectsHandler : CustomMapComponent
 {
   protected List<EffecterSpawnerConfig> effectors = new();
-  protected const string RandCellsCacheKey = "EmptyMapCells";
+  protected const string RandCellsCacheKey = "NonFullCell";
   private const int TicksPerSpawnAttempt = 40;
 
   private CaveInfo _caveInfo = null;

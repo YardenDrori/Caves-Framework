@@ -50,6 +50,11 @@ public class EffectsAtStage
   // rockfall enabled by default set <caveInParams IsNull="True" /> to disable
   public CaveInConfig caveInConfig = new();
 
+  //ambiance
+  public ScreenShakeConfig screenShakeConfig;
+  public List<EffecterSpawnerConfig> effectsConfigs = new();
+  public List<SoundPlayConfig> soundsConfigs = new();
+
   public LetterOnStageEntry letterOnStageEntry;
 
   public List<MapComponentsOnStageEntry> mapComponentsToAdd = new();
@@ -156,6 +161,27 @@ public class EffectsAtStage
       if (caveInConfig.naturalRockWeight < 0)
       {
         yield return "caveInParams.naturalRockWeight's value cannot be negative.";
+      }
+    }
+    if (screenShakeConfig != null)
+    {
+      foreach (string err in screenShakeConfig.ConfigErrors())
+      {
+        yield return err;
+      }
+    }
+    foreach (EffecterSpawnerConfig conf in effectsConfigs)
+    {
+      foreach (string err in conf.ConfigErrors())
+      {
+        yield return err;
+      }
+    }
+    foreach (SoundPlayConfig conf in soundsConfigs)
+    {
+      foreach (string err in conf.ConfigErrors())
+      {
+        yield return err;
       }
     }
   }

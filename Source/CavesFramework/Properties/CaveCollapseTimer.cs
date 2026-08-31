@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 using Verse;
 
 namespace CavesFramework;
@@ -228,12 +229,14 @@ public class CaveCollapseTimerProperties
     float prevExitPercentage = -1;
     bool hasMax1 = false;
     bool hasMin0 = false;
+    List<EffectsAtStage> sortedEffects = new(effectsAtStages);
+    sortedEffects.Sort((a, b) => a.endAtCollapsePercentage.CompareTo(b.endAtCollapsePercentage));
     for (int i = 0; i < effectsAtStages.Count; i++)
     {
-      EffectsAtStage stage = effectsAtStages[i];
+      EffectsAtStage stage = sortedEffects[i];
       foreach (string err in stage.ConfigErrors())
       {
-        yield return "stage " + (i + 1) + ": " + err;
+        yield return err;
       }
 
       if (stage.endAtCollapsePercentage == 1f)
@@ -253,20 +256,15 @@ public class CaveCollapseTimerProperties
 
       if (stage.startAtCollapsePercentage < prevExitPercentage)
       {
-        yield return "stages  " + (i + 1) + "and " + i + " have overlap between the former's exit and the latter's entry percentages.";
+        yield return "two stages have overlap between the former's exit and the latter's entry percentages.";
         continue;
       }
 
-      //this is to make things like stage 1: 0% - 10% stage 2: 10%-20% work nicely while not sharing a tick
-      if (stage.startAtCollapsePercentage == prevExitPercentage)
+      if ((stage.startAtCollapsePercentage - prevExitPercentage) > Mathf.Epsilon)
       {
-        stage.startAtCollapsePercentage += 0.01f;
+        yield return "two stages have a gap between them.";
       }
 
-      if ((stage.startAtCollapsePercentage - prevExitPercentage) > 1f)
-      {
-        yield return "stages  " + (i + 1) + "and " + i + " have a gap between them.";
-      }
       prevExitPercentage = stage.endAtCollapsePercentage;
     }
     if (!hasMax1)

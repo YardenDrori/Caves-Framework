@@ -103,37 +103,6 @@ public class EffectsAtStage
       }
     }
 
-    if (startAtCollapsePercentage.max < startAtCollapsePercentage.min)
-    {
-      yield return "startAtCollapsePercentage's max value is lesser than its min.";
-    }
-    if (startAtCollapsePercentage.max > 1f)
-    {
-      yield return "startAtCollapsePercentage has precentages values greater than 1 the range is 0~1";
-    }
-    if (startAtCollapsePercentage.min < 0f)
-    {
-      yield return "startAtCollapsePercentage has precentages values lesser than 0 the range is 0~1";
-    }
-
-    if (endAtCollapsePercentage.max < endAtCollapsePercentage.min)
-    {
-      yield return "endAtCollapsePercentage's max value is lesser than its min.";
-    }
-    if (endAtCollapsePercentage.max > 1f)
-    {
-      yield return "endAtCollapsePercentage has precentages values greater 1 the range is 0~1";
-    }
-    if (endAtCollapsePercentage.min < 0f)
-    {
-      yield return "endAtCollapsePercentage has precentages values lesser 0 the range is 0~1";
-    }
-
-    if (startAtCollapsePercentage.max > endAtCollapsePercentage.min)
-    {
-      yield return "startAtCollapsePercentage's max and endAtCollapsePercentage's min value intersect.";
-    }
-
     if (caveInConfig != null)
     {
       if (caveInConfig.countPerTrigger.max < caveInConfig.countPerTrigger.min)
@@ -256,6 +225,9 @@ public class CaveCollapseTimerProperties
       }
     }
 
+    float prevExitPercentage = -1;
+    bool hasMax1 = false;
+    bool hasMin0 = false;
     for (int i = 0; i < effectsAtStages.Count; i++)
     {
       EffectsAtStage stage = effectsAtStages[i];
@@ -263,6 +235,47 @@ public class CaveCollapseTimerProperties
       {
         yield return "stage " + (i + 1) + ": " + err;
       }
+
+      if (stage.endAtCollapsePercentage == 1f)
+      {
+        hasMax1 = true;
+      }
+      if (stage.startAtCollapsePercentage == 0f)
+      {
+        hasMin0 = true;
+      }
+
+      if (prevExitPercentage == -1)
+      {
+        prevExitPercentage = stage.endAtCollapsePercentage;
+        continue;
+      }
+
+      if (stage.startAtCollapsePercentage < prevExitPercentage)
+      {
+        yield return "stages  " + (i + 1) + "and " + i + " have overlap between the former's exit and the latter's entry percentages.";
+        continue;
+      }
+
+      //this is to make things like stage 1: 0% - 10% stage 2: 10%-20% work nicely while not sharing a tick
+      if (stage.startAtCollapsePercentage == prevExitPercentage)
+      {
+        stage.startAtCollapsePercentage += 0.01f;
+      }
+
+      if ((stage.startAtCollapsePercentage - prevExitPercentage) > 1f)
+      {
+        yield return "stages  " + (i + 1) + "and " + i + " have a gap between them.";
+      }
+      prevExitPercentage = stage.endAtCollapsePercentage;
+    }
+    if (!hasMax1)
+    {
+      yield return "no stage has an end percentage of 100% (1f).";
+    }
+    if (!hasMin0)
+    {
+      yield return "no stage has a start percentage of 0% (0f).";
     }
   }
 }

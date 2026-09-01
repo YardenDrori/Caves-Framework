@@ -7,19 +7,11 @@ namespace CavesFramework;
 
 public class EffectsAtStage
 {
-  public class LetterOnStageEntry
-  {
-    public LetterDef letterDef;
-    public string letterLabel;
-    public string letterDesc;
-  }
-
   // hook for added behavior and a buncha shit for instance adding visual effects
   public class MapComponentsOnStageEntry
   {
     public Type mapComponent;
     public bool removeOnStageEnd = true;
-    public bool logOnRemovalFailure = false;
   }
 
   public class CaveInConfig
@@ -56,7 +48,8 @@ public class EffectsAtStage
   public List<EffecterSpawnerConfig> effectsConfigs = new();
   public List<SoundPlayConfig> soundsConfigs = new();
 
-  public LetterOnStageEntry letterOnStageEntry;
+  public NotificationConfig notificationOnStageEntry;
+  public NotificationConfig notificationOnStageExit;
 
   public List<MapComponentsOnStageEntry> mapComponentsToAdd = new();
 
@@ -88,19 +81,18 @@ public class EffectsAtStage
       }
     }
 
-    if (letterOnStageEntry != null)
+    if (notificationOnStageEntry != null)
     {
-      if (letterOnStageEntry.letterDef == null)
+      foreach (string err in notificationOnStageEntry.ConfigErrors())
       {
-        yield return "letterOnStageEntry's letter def is empty";
+        yield return "notificationOnStageEntry: " + err;
       }
-      if (letterOnStageEntry.letterLabel.NullOrEmpty())
+    }
+    if (notificationOnStageExit != null)
+    {
+      foreach (string err in notificationOnStageExit.ConfigErrors())
       {
-        yield return "letterOnStageEntry's label is empty";
-      }
-      if (letterOnStageEntry.letterDesc.NullOrEmpty())
-      {
-        yield return "letterOnStageEntry's desc is empty";
+        yield return "notificationOnStageExit: " + err;
       }
     }
 
@@ -174,20 +166,8 @@ public class CaveCollapseTimerProperties
 {
   public class CollapseLetterOrMessage
   {
-    public class CollapseNotification
-    {
-      public LetterDef letterDef;
-      public string letterLabel;
-      public string letterDesc;
-
-      public MessageTypeDef messageTypeDef;
-      public string messageToast;
-
-      public bool IsLetter => letterDef != null;
-    }
-
-    public CollapseNotification noCasualties = new();
-    public CollapseNotification withCasualties = new();
+    public NotificationConfig noCasualties = new();
+    public NotificationConfig withCasualties = new();
   }
 
   public FloatRange daysToCollapse = new FloatRange(3, 3);
@@ -199,7 +179,7 @@ public class CaveCollapseTimerProperties
   //log errors on boot
   public IEnumerable<string> ConfigErrors()
   {
-    CollapseLetterOrMessage.CollapseNotification[] notifications =
+    NotificationConfig[] notifications =
     {
       letterOrMessageOnCollapse.noCasualties,
       letterOrMessageOnCollapse.withCasualties,
@@ -214,15 +194,11 @@ public class CaveCollapseTimerProperties
       yield return "days to collapse's min value must be greater than 0.";
     }
 
-    foreach (CollapseLetterOrMessage.CollapseNotification notification in notifications)
+    foreach (NotificationConfig notification in notifications)
     {
-      if (notification.letterDef != null && notification.messageTypeDef != null)
+      foreach (string err in notification.ConfigErrors())
       {
-        yield return "collapse notification has both letterDef and messageTypeDef, they are mutually exclusive";
-      }
-      if (notification.letterDef == null && notification.messageTypeDef == null)
-      {
-        yield return "collapse notification has neither letterDef nor messageTypeDef";
+        yield return "letterOrMessageOnCollapse: " + err;
       }
     }
 

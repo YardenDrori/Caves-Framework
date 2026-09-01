@@ -130,3 +130,60 @@ public class SoundPlayConfig
     }
   }
 }
+
+public class NotificationConfig
+{
+  //letterDef and messageTypeDef are mutually exclusive, whichever is set picks the kind
+  public LetterDef letterDef;
+  public string letterLabel;
+  public string letterDesc;
+
+  public MessageTypeDef messageTypeDef;
+  public string messageToast;
+
+  public bool IsLetter => letterDef != null;
+
+  //extraDesc lets callers append generated text, eg the names of the pawns a collapse killed
+  public void Send(LookTargets targets, TaggedString extraDesc = default)
+  {
+    if (IsLetter)
+    {
+      Find.LetterStack.ReceiveLetter(letterLabel, letterDesc + extraDesc, letterDef, targets);
+      return;
+    }
+
+    Messages.Message(messageToast + extraDesc, targets, messageTypeDef, true);
+  }
+
+  public IEnumerable<string> ConfigErrors()
+  {
+    if (letterDef != null && messageTypeDef != null)
+    {
+      yield return "notification has both letterDef and messageTypeDef, they are mutually exclusive.";
+      yield break;
+    }
+    if (letterDef == null && messageTypeDef == null)
+    {
+      yield return "notification has neither letterDef nor messageTypeDef.";
+      yield break;
+    }
+
+    if (IsLetter)
+    {
+      if (letterLabel.NullOrEmpty())
+      {
+        yield return "notification's letterLabel is empty.";
+      }
+      if (letterDesc.NullOrEmpty())
+      {
+        yield return "notification's letterDesc is empty.";
+      }
+      yield break;
+    }
+
+    if (messageToast.NullOrEmpty())
+    {
+      yield return "notification's messageToast is empty.";
+    }
+  }
+}

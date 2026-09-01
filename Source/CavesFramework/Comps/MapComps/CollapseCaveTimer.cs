@@ -17,11 +17,11 @@ public class CompCollapseCaveTimer : CustomMapComponent
   protected int spawnTick = -1;
   protected int tickToCollapse = -1;
   protected int initialNonFullCells = -1;
+  protected int filledCells = 0;
 
   //runtime state
   protected List<(Sustainer sustainer, float? mtbHoursToStop)> sustainedSoundWithMtbHoursToStop = new();
   protected HashSet<SoundDef> activeSustainedSounds = new();
-  protected int filledCells = 0;
   protected int cacheGen = -1;
 
   //properties
@@ -73,12 +73,13 @@ public class CompCollapseCaveTimer : CustomMapComponent
   {
     get
     {
-      if (_ticksPerDoEffect == -1)
+      if (_ticksPerUpdate == -1)
       {
-        _ticksPerDoEffect = Props.TickIntervalForEffectsAndCollapseCheck;
+        _ticksPerUpdate = Props.TicksPerUpdate;
       }
-      return _ticksPerDoEffect;
+      return _ticksPerUpdate;
     }
+    set { _ticksPerUpdate = value; }
   }
   protected int TicksToLiveTotal => tickToCollapse - spawnTick;
   private int CurrTick => Find.TickManager.TicksGame;
@@ -88,7 +89,7 @@ public class CompCollapseCaveTimer : CustomMapComponent
   private CaveCollapseTimerProperties _props = null;
   private CaveInfo _caveInfo = null;
   private Predicate<IntVec3> _vfxCellValidator = null;
-  protected int _ticksPerDoEffect = -1;
+  protected int _ticksPerUpdate = -1;
 
   //consts / configs
   protected const string RandCellCacheKey = "NonFullCell";
@@ -150,7 +151,7 @@ public class CompCollapseCaveTimer : CustomMapComponent
       if (gen != cacheGen)
       {
         cacheGen = gen;
-        filledCells = initialNonFullCells = remainingCellCount;
+        filledCells = initialNonFullCells - remainingCellCount;
       }
 
       cellCount = remainingCellCount;
@@ -164,14 +165,9 @@ public class CompCollapseCaveTimer : CustomMapComponent
   {
     if (CaveInfo.TryGetRandomCell(VfxCellValidator, RandCellCacheKey, out IntVec3 res, removeFromCache))
     {
-      int gen = CaveInfo.GetRandCellsCacheGeneration(RandCellCacheKey);
-      if (gen != cacheGen)
+      if (CaveInfo.GetRandCellsCacheGeneration(RandCellCacheKey) != cacheGen)
       {
-        cacheGen = gen;
-        if (TryGetNonFullCellCount(out int currEmptyCellCount))
-        {
-          filledCells = initialNonFullCells = currEmptyCellCount;
-        }
+        TryGetNonFullCellCount(out _);
       }
 
       cell = res;
@@ -303,6 +299,7 @@ public class CompCollapseCaveTimer : CustomMapComponent
       }
     }
     effect.notificationOnStageExit?.Send(new LookTargets(map.Center, map));
+    TicksPerUpdate = Props.TicksPerUpdate;
   }
 
   protected virtual void ApplyNewStageEffects(EffectsAtStage effect)
@@ -320,6 +317,7 @@ public class CompCollapseCaveTimer : CustomMapComponent
       }
     }
     effect.notificationOnStageEntry?.Send(new LookTargets(map.Center, map));
+    TicksPerUpdate = effect.TicksPerUpdateOverride ?? Props.TicksPerUpdate;
   }
 
   protected virtual void CollapseIfShould()
@@ -425,5 +423,6 @@ public class CompCollapseCaveTimer : CustomMapComponent
     Scribe_Values.Look(ref spawnTick, "spawnTick", -1);
     Scribe_Values.Look(ref tickToCollapse, "tickToCollapse", -1);
     Scribe_Values.Look(ref initialNonFullCells, "initialNonFullCells", -1);
+    Scribe_Values.Look(ref filledCells, "filledCells", 0);
   }
 }

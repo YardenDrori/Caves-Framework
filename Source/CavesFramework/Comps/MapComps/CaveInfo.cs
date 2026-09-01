@@ -15,6 +15,8 @@ public class CaveInfo : CustomMapComponent
   public List<ThingDef> rockDefs;
   public CaveEntrance portalIntoCave;
 
+  private Dictionary<string, RandCellsCache> randCellsCacheByKey = new();
+
   public override void ExposeData()
   {
     base.ExposeData();
@@ -47,62 +49,133 @@ public class CaveInfo : CustomMapComponent
 
   private class RandCellsCache
   {
-    public List<IntVec3> cells;
-    public int index;
-    public int wrapsUntilStale;
+    private readonly Map map;
+    private readonly Predicate<IntVec3> validator;
+    private readonly int wrapsUntilStale;
 
-    public RandCellsCache(List<IntVec3> cells, int wrapsUntilStale = 10)
+    private readonly List<IntVec3> cells = new();
+    private int index;
+    private int wrapsLeft;
+
+    public int Count => cells.Count;
+    public int Generation { get; private set; }
+
+    public RandCellsCache(Map map, Predicate<IntVec3> validator, int wrapsUntilStale = 10)
     {
-      this.cells = cells;
+      this.map = map;
+      this.validator = validator;
       this.wrapsUntilStale = wrapsUntilStale;
-      index = 0;
-    }
-  }
-
-  private Dictionary<string, RandCellsCache> randCellsCacheByKey = new();
-
-  public bool TryGetCellCountForRandCellsCache(string cacheKey, Predicate<IntVec3> validator, out int cellCount)
-  {
-    RandCellsCache cache = EnsureRandCellsCache(cacheKey, validator);
-    cellCount = cache.cells.Count;
-    return cellCount > 0;
-  }
-
-  public bool TryGetRandomCell(Predicate<IntVec3> validator, string cacheKey, out IntVec3 result)
-  {
-    if (cacheKey != null && randCellsCacheByKey.TryGetValue(cacheKey, out RandCellsCache existingCache))
-    {
-      if (TryGetRandCellFromCache(existingCache, cacheKey, validator, out result))
-        return true;
-
-      randCellsCacheByKey.Remove(cacheKey);
+      Rebuild();
     }
 
-    if (cacheKey == null)
+    public void Rebuild()
     {
+      cells.Clear();
       MapCellsInRandomOrder randMapCells = map.cellsInRandomOrder;
       for (int i = 0; i < map.Area; i++)
       {
-        IntVec3 cell = randMapCells.Get(Rand.RangeInclusive(0, map.Area - 1));
-        if (!validator(cell))
+        IntVec3 cell = randMapCells.Get(i);
+        if (validator(cell))
+          cells.Add(cell);
+      }
+      index = 0;
+      wrapsLeft = wrapsUntilStale;
+      Generation++;
+    }
+
+    public bool TryGetCell(bool removeCell, out IntVec3 result)
+    {
+      while (cells.Count > 0)
+      {
+        if (index >= cells.Count)
+        {
+          index = 0;
+          wrapsLeft--;
+          if (wrapsLeft <= 0)
+          {
+            Rebuild();
+            if (cells.Count == 0)
+              break;
+          }
+        }
+
+        if (!validator(cells[index]))
+        {
+          cells.RemoveAt(index);
           continue;
-        result = cell;
+        }
+
+        result = cells[index];
+        if (removeCell)
+        {
+          cells.RemoveAt(index);
+        }
+        else
+        {
+          index++;
+        }
         return true;
       }
       result = IntVec3.Invalid;
       return false;
     }
+  }
 
-    RandCellsCache cache = EnsureRandCellsCache(cacheKey, validator);
-    if (cache.cells.Count < 1)
+  public bool TryGetCellCountForRandCellsCache(string cacheKey, Predicate<IntVec3> validator, out int cellCount)
+  {
+    cellCount = EnsureRandCellsCache(cacheKey, validator).Count;
+    return cellCount > 0;
+  }
+
+  public int GetRandCellsCacheGeneration(string cacheKey)
+  {
+    if (randCellsCacheByKey.TryGetValue(cacheKey, out RandCellsCache cache))
     {
-      result = IntVec3.Invalid;
-      randCellsCacheByKey.Remove(cacheKey);
-      return false;
+      return cache.Generation;
     }
+    return -1;
+  }
 
-    result = cache.cells[cache.index++];
-    return true;
+  public void RebuildRandCellsCache(string cacheKey)
+  {
+    if (randCellsCacheByKey.TryGetValue(cacheKey, out RandCellsCache cache))
+    {
+      cache.Rebuild();
+    }
+  }
+
+  public bool TryGetRandomCell(Predicate<IntVec3> validator, string cacheKey, out IntVec3 result, bool removeCellFromCache = false)
+  {
+    if (cacheKey == null)
+    {
+      return TryGetRandomCellUncached(validator, out result);
+    }
+    return EnsureRandCellsCache(cacheKey, validator).TryGetCell(removeCellFromCache, out result);
+  }
+
+  public bool TryGetRandomCellUncached(Predicate<IntVec3> validator, out IntVec3 result)
+  {
+    MapCellsInRandomOrder randMapCells = map.cellsInRandomOrder;
+    for (int i = 0; i < map.Area; i++)
+    {
+      IntVec3 cell = randMapCells.Get(Rand.RangeInclusive(0, map.Area - 1));
+      if (!validator(cell))
+        continue;
+      result = cell;
+      return true;
+    }
+    result = IntVec3.Invalid;
+    return false;
+  }
+
+  private RandCellsCache EnsureRandCellsCache(string cacheKey, Predicate<IntVec3> validator)
+  {
+    if (!randCellsCacheByKey.TryGetValue(cacheKey, out RandCellsCache cache))
+    {
+      cache = new RandCellsCache(map, validator);
+      randCellsCacheByKey[cacheKey] = cache;
+    }
+    return cache;
   }
 
   public bool NotSolidPredicate(IntVec3 c)
@@ -113,55 +186,6 @@ public class CaveInfo : CustomMapComponent
       return false;
     }
     return true;
-  }
-
-  private RandCellsCache EnsureRandCellsCache(string cacheKey, Predicate<IntVec3> validator)
-  {
-    if (randCellsCacheByKey.TryGetValue(cacheKey, out RandCellsCache cache))
-      return cache;
-
-    MapCellsInRandomOrder randMapCells = map.cellsInRandomOrder;
-    List<IntVec3> cells = new List<IntVec3>();
-    for (int i = 0; i < map.Area; i++)
-    {
-      IntVec3 cell = randMapCells.Get(i);
-      if (validator(cell))
-        cells.Add(cell);
-    }
-
-    cache = new RandCellsCache(cells);
-    randCellsCacheByKey[cacheKey] = cache;
-    return cache;
-  }
-
-  private bool TryGetRandCellFromCache(RandCellsCache cache, string cacheKey, Predicate<IntVec3> validator, out IntVec3 result)
-  {
-    while (cache.cells.Count > 0)
-    {
-      if (cache.index >= cache.cells.Count)
-      {
-        cache.index = 0;
-        cache.wrapsUntilStale--;
-        if (cache.wrapsUntilStale <= 0)
-        {
-          randCellsCacheByKey.Remove(cacheKey);
-          result = IntVec3.Invalid;
-          return false;
-        }
-      }
-
-      if (!validator(cache.cells[cache.index]))
-      {
-        cache.cells.RemoveAt(cache.index);
-        continue;
-      }
-
-      result = cache.cells[cache.index];
-      cache.index++;
-      return true;
-    }
-    result = IntVec3.Invalid;
-    return false;
   }
 
   public CaveInfo(Map map)

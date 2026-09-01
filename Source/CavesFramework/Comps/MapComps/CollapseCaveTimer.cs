@@ -21,6 +21,8 @@ public class CompCollapseCaveTimer : CustomMapComponent
   //runtime state
   protected List<(Sustainer sustainer, float? mtbHoursToStop)> sustainedSoundWithMtbHoursToStop = new();
   protected HashSet<SoundDef> activeSustainedSounds = new();
+  protected int filledCells = 0;
+  protected int cacheGen = -1;
 
   //properties
   protected CaveCollapseTimerProperties Props
@@ -140,16 +142,44 @@ public class CompCollapseCaveTimer : CustomMapComponent
     }
   }
 
-  protected virtual void DoCaveInIfShould()
+  protected bool TryGetNonFullCellCount(out int cellCount)
   {
-    //step 1 check we arent over the max rock percentage
-    //step 2 pick a valid cell
-    //step 3 spawn effects if should
-    //step 4 play sound if should
-    //step 5 pick rockDef
-    //step 6 spawn rock
+    if (CaveInfo.TryGetCellCountForRandCellsCache(RandCellCacheKey, VfxCellValidator, out int remainingCellCount))
+    {
+      int gen = CaveInfo.GetRandCellsCacheGeneration(RandCellCacheKey);
+      if (gen != cacheGen)
+      {
+        cacheGen = gen;
+        filledCells = initialNonFullCells = remainingCellCount;
+      }
+
+      cellCount = remainingCellCount;
+      return true;
+    }
+    cellCount = -1;
+    return false;
   }
 
+  protected bool TryGetRandomCell(out IntVec3 cell, bool removeFromCache = false)
+  {
+    if (CaveInfo.TryGetRandomCell(VfxCellValidator, RandCellCacheKey, out IntVec3 res, removeFromCache))
+    {
+      int gen = CaveInfo.GetRandCellsCacheGeneration(RandCellCacheKey);
+      if (gen != cacheGen)
+      {
+        cacheGen = gen;
+        if (TryGetNonFullCellCount(out int currEmptyCellCount))
+        {
+          filledCells = initialNonFullCells = currEmptyCellCount;
+        }
+      }
+
+      cell = res;
+      return true;
+    }
+    cell = IntVec3.Invalid;
+    return false;
+  }
   protected virtual void DoEffects()
   {
     if (!TryGetCurrentStage(out EffectsAtStage effect))
@@ -205,7 +235,7 @@ public class CompCollapseCaveTimer : CustomMapComponent
     }
 
     //visual effects
-    bool countAvailable = CaveInfo.TryGetCellCountForRandCellsCache(RandCellCacheKey, VfxCellValidator, out int cellCount);
+    bool countAvailable = TryGetNonFullCellCount(out int cellCount);
     foreach (EffecterSpawnerConfig vfx in effect.effectsConfigs)
     {
       if (!countAvailable && vfx.spawnsPerHourPer10kEmptyCells.HasValue)
@@ -218,7 +248,7 @@ public class CompCollapseCaveTimer : CustomMapComponent
         continue;
       }
 
-      if (!CaveInfo.TryGetRandomCell(VfxCellValidator, RandCellCacheKey, out IntVec3 targetCell))
+      if (TryGetRandomCell(out IntVec3 targetCell))
       {
         continue;
       }

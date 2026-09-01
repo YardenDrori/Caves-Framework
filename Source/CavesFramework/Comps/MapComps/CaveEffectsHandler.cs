@@ -61,8 +61,7 @@ public class CaveEffectsHandler : CustomMapComponent
   protected virtual bool ShouldSpawnEffect(EffecterSpawnerConfig effect, int cellCount)
   {
     //no empty cells means the divisor is 0, which gives an infinite mtb, which never fires
-    float effectiveMtbHours = effect.mtbHoursPerSpawn ?? (10000f / (effect.spawnsPerHourPer10kEmptyCells.Value * cellCount));
-    return Rand.MTBEventOccurs(effectiveMtbHours, GenDate.TicksPerHour, TicksPerSpawnAttempt);
+    return Rand.MTBEventOccurs(effect.EffectiveMtbHours(cellCount), GenDate.TicksPerHour, TicksPerSpawnAttempt);
   }
 
   public CaveEffectsHandler(Map map)

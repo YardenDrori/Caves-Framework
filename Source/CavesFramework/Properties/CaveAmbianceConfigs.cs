@@ -13,6 +13,11 @@ public class EffecterSpawnerConfig
   //scales with cave size higher -> spawn more
   public float? spawnsPerHourPer10kEmptyCells;
 
+  public float EffectiveMtbHours(int cellCount)
+  {
+    return mtbHoursPerSpawn ?? (10000f / (spawnsPerHourPer10kEmptyCells.Value * cellCount));
+  }
+
   public IEnumerable<string> ConfigErrors()
   {
     //xor check
@@ -86,7 +91,7 @@ public class SoundPlayConfig
     //every check below reads the def, bail before they can nre
     if (soundDef.NullOrUndefined())
     {
-      yield return "soundDef has no value.";
+      yield return "soundDef has no value. This will lead to NERs downstream.";
       yield break;
     }
 

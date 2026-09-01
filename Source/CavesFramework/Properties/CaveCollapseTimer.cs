@@ -190,9 +190,16 @@ public class CaveCollapseTimerProperties
   public SoundDef soundDefOnCollapse;
   public EffecterDef caveEntranceEffecterDefOnCollapse;
 
+  public int TickIntervalForEffectsAndCollapseCheck = 45;
+
   //log errors on boot
   public IEnumerable<string> ConfigErrors()
   {
+    if (TickIntervalForEffectsAndCollapseCheck < 1)
+    {
+      yield return "tickIntervalForEffectsAndCaveIn has a non positive value.";
+    }
+
     NotificationConfig[] notifications = { letterOrMessageOnCollapse.noCasualties, letterOrMessageOnCollapse.withCasualties };
 
     if (soundDefOnCollapse?.sustain ?? false)

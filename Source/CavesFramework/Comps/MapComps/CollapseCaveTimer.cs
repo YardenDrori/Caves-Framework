@@ -67,6 +67,17 @@ public class CompCollapseCaveTimer : CustomMapComponent
       return _vfxCellValidator;
     }
   }
+  protected int TicksPerUpdate
+  {
+    get
+    {
+      if (_ticksPerDoEffect == -1)
+      {
+        _ticksPerDoEffect = Props.TickIntervalForEffectsAndCollapseCheck;
+      }
+      return _ticksPerDoEffect;
+    }
+  }
   protected int TicksToLiveTotal => tickToCollapse - spawnTick;
   private int CurrTick => Find.TickManager.TicksGame;
 
@@ -75,9 +86,9 @@ public class CompCollapseCaveTimer : CustomMapComponent
   private CaveCollapseTimerProperties _props = null;
   private CaveInfo _caveInfo = null;
   private Predicate<IntVec3> _vfxCellValidator = null;
+  protected int _ticksPerDoEffect = -1;
 
   //consts / configs
-  protected const int TicksPerDoEffect = 40;
   protected const string RandCellCacheKey = "NonFullCell";
 
   public override void FinalizeInit()
@@ -109,17 +120,13 @@ public class CompCollapseCaveTimer : CustomMapComponent
   {
     base.MapComponentTick();
 
-    //check for stage update every 250 ticks
-    if (map.IsHashIntervalTick(250, 0))
+    if (map.IsHashIntervalTick(TicksPerUpdate, 2))
     {
       if (CurrTick > CurrStageEndTick)
       {
         ProgressStage();
       }
-    }
 
-    if (map.IsHashIntervalTick(TicksPerDoEffect, 2))
-    {
       DoCaveInIfShould();
 
       if (Find.CurrentMap == map)
@@ -151,7 +158,7 @@ public class CompCollapseCaveTimer : CustomMapComponent
     }
 
     //camera shake
-    if (effect.screenShakeConfig != null && Rand.MTBEventOccurs(effect.screenShakeConfig.mtbHoursPerShake, GenDate.TicksPerHour, TicksPerDoEffect))
+    if (effect.screenShakeConfig != null && Rand.MTBEventOccurs(effect.screenShakeConfig.mtbHoursPerShake, GenDate.TicksPerHour, TicksPerUpdate))
     {
       Find.CameraDriver.shaker.DoShake(effect.screenShakeConfig.shakeAmount, effect.screenShakeConfig.shakeDurationTicks);
     }
@@ -166,14 +173,14 @@ public class CompCollapseCaveTimer : CustomMapComponent
 
       if (!sfx.IsSustained)
       {
-        if (Rand.MTBEventOccurs(sfx.mtbHoursPerPlay.Value, GenDate.TicksPerHour, TicksPerDoEffect))
+        if (Rand.MTBEventOccurs(sfx.mtbHoursPerPlay.Value, GenDate.TicksPerHour, TicksPerUpdate))
         {
           sfx.soundDef.PlayOneShotOnCamera(map);
         }
         continue; //saves a non trivial Rand call
       }
 
-      if (!sfx.mtbHoursToStartPlaying.HasValue || Rand.MTBEventOccurs(sfx.mtbHoursToStartPlaying.Value, GenDate.TicksPerHour, TicksPerDoEffect))
+      if (!sfx.mtbHoursToStartPlaying.HasValue || Rand.MTBEventOccurs(sfx.mtbHoursToStartPlaying.Value, GenDate.TicksPerHour, TicksPerUpdate))
       {
         Sustainer sustainer = sfx.soundDef.TrySpawnSustainer(SoundInfo.OnCamera(MaintenanceType.PerTickRare)); //can NRE but vanilla logs the important one sooo
         activeSustainedSounds.Add(sfx.soundDef);
@@ -186,7 +193,7 @@ public class CompCollapseCaveTimer : CustomMapComponent
     {
       Sustainer sustainer = sustainedSoundWithMtbHoursToStop[i].sustainer;
       float? mtbToStop = sustainedSoundWithMtbHoursToStop[i].mtbHoursToStop;
-      if (mtbToStop.HasValue && Rand.MTBEventOccurs(mtbToStop.Value, GenDate.TicksPerHour, TicksPerDoEffect))
+      if (mtbToStop.HasValue && Rand.MTBEventOccurs(mtbToStop.Value, GenDate.TicksPerHour, TicksPerUpdate))
       {
         sustainedSoundWithMtbHoursToStop.RemoveAt(i);
         activeSustainedSounds.Remove(sustainer.def);
@@ -206,7 +213,7 @@ public class CompCollapseCaveTimer : CustomMapComponent
         continue;
       }
 
-      if (!Rand.MTBEventOccurs(vfx.EffectiveMtbHours(cellCount), GenDate.TicksPerHour, TicksPerDoEffect))
+      if (!Rand.MTBEventOccurs(vfx.EffectiveMtbHours(cellCount), GenDate.TicksPerHour, TicksPerUpdate))
       {
         continue;
       }

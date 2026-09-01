@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Verse;
 
@@ -17,6 +18,8 @@ public class EffectsAtStage
   public class CaveInConfig
   {
     public float mtbHoursPerTrigger = 1f;
+    public SimpleCurve mtbFactorOverRemainingEmptyFraction;
+
     public IntRange countPerTrigger = new IntRange(1, 3);
 
     public float maxAirCellsToFillFraction = 0.85f;
@@ -105,6 +108,14 @@ public class EffectsAtStage
       if (caveInConfig.countPerTrigger.min < 1)
       {
         yield return "caveInParams.countPerTrigger's min value is lesser than 1.";
+      }
+
+      foreach (
+        string err in caveInConfig.mtbFactorOverRemainingEmptyFraction?.ConfigErrors("factor over remaining empty cells")
+          ?? Enumerable.Empty<string>()
+      )
+      {
+        yield return err;
       }
 
       if (caveInConfig.distanceFromWalls.max < caveInConfig.distanceFromWalls.min)

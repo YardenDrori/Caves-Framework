@@ -16,6 +16,7 @@ public class CompCollapseCaveTimer : CustomMapComponent
   //exposed state
   protected int spawnTick = -1;
   protected int tickToCollapse = -1;
+  protected int initialNonFullCells = -1;
 
   //runtime state
   protected List<(Sustainer sustainer, float? mtbHoursToStop)> sustainedSoundWithMtbHoursToStop = new();
@@ -91,6 +92,17 @@ public class CompCollapseCaveTimer : CustomMapComponent
     {
       tickToCollapse = spawnTick + GenDate.DaysToTicks(Props.daysToCollapse.RandomInRange);
     }
+    if (initialNonFullCells == -1)
+    {
+      initialNonFullCells = 0;
+      foreach (IntVec3 cell in map.AllCells)
+      {
+        if (CaveInfo.NotSolidPredicate(cell))
+        {
+          initialNonFullCells++;
+        }
+      }
+    }
   }
 
   public override void MapComponentTick()
@@ -106,17 +118,29 @@ public class CompCollapseCaveTimer : CustomMapComponent
       }
     }
 
-    if (Find.CurrentMap == map)
+    if (map.IsHashIntervalTick(TicksPerDoEffect, 2))
     {
-      if (map.IsHashIntervalTick(TicksPerDoEffect, 2))
+      DoCaveInIfShould();
+
+      if (Find.CurrentMap == map)
       {
         DoEffects();
       }
+      else
+      {
+        KillAllSustainedSounds();
+      }
     }
-    else
-    {
-      KillAllSustainedSounds();
-    }
+  }
+
+  protected virtual void DoCaveInIfShould()
+  {
+    //step 1 check we arent over the max rock percentage
+    //step 2 pick a valid cell
+    //step 3 spawn effects if should
+    //step 4 play sound if should
+    //step 5 pick rockDef
+    //step 6 spawn rock
   }
 
   protected virtual void DoEffects()
@@ -363,5 +387,6 @@ public class CompCollapseCaveTimer : CustomMapComponent
 
     Scribe_Values.Look(ref spawnTick, "spawnTick", -1);
     Scribe_Values.Look(ref tickToCollapse, "tickToCollapse", -1);
+    Scribe_Values.Look(ref initialNonFullCells, "initialNonFullCells", -1);
   }
 }

@@ -236,7 +236,7 @@ public class CaveCollapseTimerProperties
       EffectsAtStage stage = sortedEffects[i];
       foreach (string err in stage.ConfigErrors())
       {
-        yield return err;
+        yield return $"stage {stage.startAtCollapsePercentage}-{stage.endAtCollapsePercentage}: {err}";
       }
 
       if (stage.endAtCollapsePercentage == 1f)
@@ -256,13 +256,13 @@ public class CaveCollapseTimerProperties
 
       if (stage.startAtCollapsePercentage < prevExitPercentage)
       {
-        yield return "two stages have overlap between the former's exit and the latter's entry percentages.";
+        yield return $"stage {stage.startAtCollapsePercentage}-{stage.endAtCollapsePercentage}: starts before the previous stage ends at {prevExitPercentage}, stages may not overlap.";
         continue;
       }
 
       if ((stage.startAtCollapsePercentage - prevExitPercentage) > Mathf.Epsilon)
       {
-        yield return "two stages have a gap between them.";
+        yield return $"stage {stage.startAtCollapsePercentage}-{stage.endAtCollapsePercentage}: leaves a gap after the previous stage ends at {prevExitPercentage}, stages must be contiguous.";
       }
 
       prevExitPercentage = stage.endAtCollapsePercentage;

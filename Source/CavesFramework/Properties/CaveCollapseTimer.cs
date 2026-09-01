@@ -40,6 +40,8 @@ public class EffectsAtStage
     public SoundDef caveInSound;
   }
 
+  public int? TicksPerUpdateOverride;
+
   public float startAtCollapsePercentage = 0f;
   public float endAtCollapsePercentage = 1f;
 
@@ -58,6 +60,11 @@ public class EffectsAtStage
 
   public IEnumerable<string> ConfigErrors()
   {
+    if (TicksPerUpdateOverride.HasValue && TicksPerUpdateOverride.Value < 1)
+    {
+      yield return "TicksPerUpdateOverride has a non positive value.";
+    }
+
     if (startAtCollapsePercentage >= endAtCollapsePercentage)
     {
       yield return "start collapse percentage is not lesser than end at collapse percentage.";
@@ -190,12 +197,12 @@ public class CaveCollapseTimerProperties
   public SoundDef soundDefOnCollapse;
   public EffecterDef caveEntranceEffecterDefOnCollapse;
 
-  public int TickIntervalForEffectsAndCollapseCheck = 45;
+  public int TicksPerUpdate = 45;
 
   //log errors on boot
   public IEnumerable<string> ConfigErrors()
   {
-    if (TickIntervalForEffectsAndCollapseCheck < 1)
+    if (TicksPerUpdate < 1)
     {
       yield return "tickIntervalForEffectsAndCaveIn has a non positive value.";
     }

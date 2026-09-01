@@ -18,8 +18,8 @@ public class CompCollapseCaveTimer : CustomMapComponent
   protected int tickToCollapse = -1;
 
   //runtime state
-  List<(Sustainer sustainer, float? mtbHoursToStop)> sustainedSoundWithMtbHoursToStop = new();
-  HashSet<SoundDef> activeSustainedSounds = new();
+  protected List<(Sustainer sustainer, float? mtbHoursToStop)> sustainedSoundWithMtbHoursToStop = new();
+  protected HashSet<SoundDef> activeSustainedSounds = new();
 
   //properties
   protected CaveCollapseTimerProperties Props
@@ -241,7 +241,7 @@ public class CompCollapseCaveTimer : CustomMapComponent
         map.components.RemoveWhere(comp => comp.GetType() == mapComp.mapComponent);
       }
     }
-    effect.notificationOnStageExit?.Send(LookTargets.Invalid);
+    effect.notificationOnStageExit?.Send(new LookTargets(map.Center, map));
   }
 
   protected virtual void ApplyNewStageEffects(EffectsAtStage effect)
@@ -258,7 +258,7 @@ public class CompCollapseCaveTimer : CustomMapComponent
         Log.Error("Could not instantiate a MapComponent of type " + mapComp.mapComponent?.ToString() + ": " + ex);
       }
     }
-    effect.notificationOnStageEntry.Send(LookTargets.Invalid);
+    effect.notificationOnStageEntry?.Send(new LookTargets(map.Center, map));
   }
 
   protected virtual void CollapseIfShould()
@@ -314,7 +314,7 @@ public class CompCollapseCaveTimer : CustomMapComponent
   protected List<Pawn> GetAllPawnsInCave(out List<Pawn> colonyPawns)
   {
     colonyPawns = new(map.mapPawns.FreeColonistsAndPrisoners);
-    return map.mapPawns.AllPawns;
+    return new List<Pawn>(map.mapPawns.AllPawns);
   }
 
   protected virtual bool TryUpdateCurrEffectCache()
@@ -349,9 +349,9 @@ public class CompCollapseCaveTimer : CustomMapComponent
       return;
     }
 
-    foreach (var sustainer in sustainedSoundWithMtbHoursToStop)
+    foreach (var entry in sustainedSoundWithMtbHoursToStop)
     {
-      sustainer.sustainer.End();
+      entry.sustainer.End();
     }
     sustainedSoundWithMtbHoursToStop.Clear();
     activeSustainedSounds.Clear();

@@ -176,14 +176,18 @@ public class CaveCollapseTimerProperties
 
   public CollapseLetterOrMessage letterOrMessageOnCollapse = new();
 
+  public SoundDef soundDefOnCollapse;
+  public EffecterDef caveEntranceEffecterDefOnCollapse;
+
   //log errors on boot
   public IEnumerable<string> ConfigErrors()
   {
-    NotificationConfig[] notifications =
+    NotificationConfig[] notifications = { letterOrMessageOnCollapse.noCasualties, letterOrMessageOnCollapse.withCasualties };
+
+    if (soundDefOnCollapse?.sustain ?? false)
     {
-      letterOrMessageOnCollapse.noCasualties,
-      letterOrMessageOnCollapse.withCasualties,
-    };
+      yield return "soundDefOnCollapse must be a oneshot.";
+    }
 
     if (daysToCollapse.max < daysToCollapse.min)
     {

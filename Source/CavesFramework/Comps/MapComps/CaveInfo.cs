@@ -11,8 +11,8 @@ public class CaveInfo : CustomMapComponent
   public CaveShapeDef caveShapeDef;
   public BiomeDef biomeDef;
   public CaveDef caveDef;
-  public List<TileMutatorDef> mutators;
-  public List<ThingDef> rockDefs;
+  public List<TileMutatorDef> mutators = new();
+  public List<ThingDef> rockDefs = new();
   public CaveEntrance portalIntoCave;
 
   private Dictionary<string, RandCellsCache> randCellsCacheByKey = new();

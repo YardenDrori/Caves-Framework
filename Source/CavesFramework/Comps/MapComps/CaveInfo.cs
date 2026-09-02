@@ -25,6 +25,7 @@ public class CaveInfo : CustomMapComponent
     Scribe_Defs.Look(ref biomeDef, "CF_BiomeDef");
     Scribe_Defs.Look(ref caveDef, "CF_CaveDef");
     Scribe_Collections.Look(ref mutators, "CF_Mutators", LookMode.Def);
+    Scribe_Collections.Look(ref rockDefs, "RockDefs", LookMode.Def);
     Scribe_References.Look(ref portalIntoCave, "portalIntoCave");
 
     if (Scribe.mode == LoadSaveMode.PostLoadInit)

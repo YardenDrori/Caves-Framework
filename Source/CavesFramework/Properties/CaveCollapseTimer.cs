@@ -27,10 +27,8 @@ public class EffectsAtStage
     public float naturalRockWeight = 1f;
     public List<ThingOption> additionalRockTypes = new();
 
-    public IntRange distanceFromWalls = new IntRange(1, 2);
-    public int minCellDistanceFromExit = 15;
-
-    public bool canBlockPathwayToExit = true;
+    public int? maxDistFromWalls;
+    public int? minCellDistanceFromExit;
 
     //NOTE: doesnt apply to pawns cause instakill != fun
     public bool canCrushExistingThings = true;
@@ -125,13 +123,9 @@ public class EffectsAtStage
         yield return err;
       }
 
-      if (caveInConfig.distanceFromWalls.max < caveInConfig.distanceFromWalls.min)
+      if (caveInConfig.maxDistFromWalls.HasValue && caveInConfig.maxDistFromWalls.Value < 1)
       {
-        yield return "caveInParams.distanceFromWalls's max value is lesser than its min.";
-      }
-      if (caveInConfig.distanceFromWalls.min < 0)
-      {
-        yield return "caveInParams.distanceFromWalls's min value cannot be negative.";
+        yield return "caveInParams.maxDistFromWalls's value is a non positive value.";
       }
 
       if (caveInConfig.maxAirCellsToFillFraction <= 0)
@@ -143,7 +137,7 @@ public class EffectsAtStage
         yield return "caveInParams.maxAirCellsToFillFraction's value is greater than 1, the range is 0~1.";
       }
 
-      if (caveInConfig.minCellDistanceFromExit < 0)
+      if (caveInConfig.minCellDistanceFromExit.HasValue && caveInConfig.minCellDistanceFromExit.Value < 0)
       {
         yield return "caveInParams.minCellDistanceFromExit's value cannot be negative.";
       }

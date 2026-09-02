@@ -69,18 +69,27 @@ public class CompCollapseCaveTimer : CustomMapComponent
       return _vfxCellValidator;
     }
   }
+
   protected int TicksPerUpdate
   {
     get
     {
       if (_ticksPerUpdate == -1)
       {
-        _ticksPerUpdate = Props.TicksPerUpdate;
+        if (TryGetCurrentStage(out EffectsAtStage stage))
+        {
+          _ticksPerUpdate = stage.TicksPerUpdateOverride ?? Props.TicksPerUpdate;
+        }
+        else
+        {
+          _ticksPerUpdate = Props.TicksPerUpdate;
+        }
       }
       return _ticksPerUpdate;
     }
     set { _ticksPerUpdate = value; }
   }
+
   protected int TicksToLiveTotal => tickToCollapse - spawnTick;
   private int CurrTick => Find.TickManager.TicksGame;
 
@@ -108,14 +117,15 @@ public class CompCollapseCaveTimer : CustomMapComponent
     }
     if (initialNonFullCells == -1)
     {
-      initialNonFullCells = 0;
+      int counter = 0;
       foreach (IntVec3 cell in map.AllCells)
       {
         if (CaveInfo.NotSolidPredicate(cell))
         {
-          initialNonFullCells++;
+          counter++;
         }
       }
+      initialNonFullCells = Mathf.Max(1, counter);
     }
   }
 
@@ -130,7 +140,10 @@ public class CompCollapseCaveTimer : CustomMapComponent
         ProgressStage();
       }
 
-      DoCaveInIfShould();
+      if (ShouldDoCaveIn())
+      {
+        DoCaveIn();
+      }
 
       if (Find.CurrentMap == map)
       {
@@ -143,8 +156,14 @@ public class CompCollapseCaveTimer : CustomMapComponent
     }
   }
 
-  protected bool TryGetNonFullCellCount(out int cellCount)
+  protected bool TryGetNonFullCellCount(out int cellCount, bool forceCacheRead = false)
   {
+    if (filledCells > 0 && !forceCacheRead)
+    {
+      cellCount = initialNonFullCells - filledCells;
+      return cellCount > 0;
+    }
+
     if (CaveInfo.TryGetCellCountForRandCellsCache(RandCellCacheKey, VfxCellValidator, out int remainingCellCount))
     {
       int gen = CaveInfo.GetRandCellsCacheGeneration(RandCellCacheKey);
@@ -167,7 +186,7 @@ public class CompCollapseCaveTimer : CustomMapComponent
     {
       if (CaveInfo.GetRandCellsCacheGeneration(RandCellCacheKey) != cacheGen)
       {
-        TryGetNonFullCellCount(out _);
+        TryGetNonFullCellCount(out _, forceCacheRead: true);
       }
 
       cell = res;
@@ -176,6 +195,172 @@ public class CompCollapseCaveTimer : CustomMapComponent
     cell = IntVec3.Invalid;
     return false;
   }
+
+  protected virtual bool ShouldDoCaveIn()
+  {
+    if (!TryGetCurrentStage(out EffectsAtStage effects))
+    {
+      return false;
+    }
+
+    if (effects.caveInConfig == null)
+    {
+      return false;
+    }
+
+    if (!TryGetNonFullCellCount(out int cellCount))
+    {
+      return false;
+    }
+
+    float remainingFraction = (float)cellCount / initialNonFullCells;
+    float filledFraction = 1f - remainingFraction;
+    float ratio =
+      effects.caveInConfig.mtbFactorOverRemainingEmptyFraction != null
+        ? effects.caveInConfig.mtbFactorOverRemainingEmptyFraction.Evaluate(remainingFraction)
+        : 1;
+
+    return filledFraction < effects.caveInConfig.maxAirCellsToFillFraction
+      && Rand.MTBEventOccurs(effects.caveInConfig.mtbHoursPerTrigger * ratio, GenDate.TicksPerHour, TicksPerUpdate);
+  }
+
+  protected virtual void DoCaveIn()
+  {
+    if (!TryGetCurrentStage(out EffectsAtStage effects))
+    {
+      return;
+    }
+
+    int cellsToFill = effects.caveInConfig.countPerTrigger.RandomInRange;
+    int rerollsLeft = 10;
+    for (int i = 0; i < cellsToFill; i++)
+    {
+      if (TryGetRandomCell(out IntVec3 cell))
+      {
+        if (!CanDoCaveInOnCell(effects, cell))
+        {
+          if (rerollsLeft > 0)
+          {
+            rerollsLeft--;
+            i--;
+          }
+          continue;
+        }
+
+        if (DoCaveInOnCell(effects, cell))
+        {
+          filledCells++;
+        }
+      }
+    }
+  }
+
+  protected virtual bool CanDoCaveInOnCell(EffectsAtStage effects, IntVec3 cell)
+  {
+    if (!effects.caveInConfig.canCrushExistingThings && (cell.GetEdifice(map) != null || cell.GetFirstItem(map) != null))
+    {
+      return false;
+    }
+
+    int? minDistFromExit = effects.caveInConfig.minCellDistanceFromExit;
+    if (minDistFromExit.HasValue)
+    {
+      IntVec3 exitPos = CaveInfo.portalIntoCave?.exit.Position ?? IntVec3.Invalid;
+      if (exitPos != IntVec3.Invalid && cell.DistanceTo(exitPos) < minDistFromExit.Value)
+      {
+        return false;
+      }
+    }
+
+    if (cell.GetFirstPawn(map) != null)
+    {
+      return false;
+    }
+
+    if (effects.caveInConfig.maxDistFromWalls.HasValue)
+    {
+      bool naturalRockInRadius = false;
+
+      int numCells = GenRadial.NumCellsInRadius(effects.caveInConfig.maxDistFromWalls.Value);
+      for (int i = 0; i < numCells; i++)
+      {
+        IntVec3 candidate = cell + GenRadial.RadialPattern[i];
+        if (candidate.InBounds(map) && (candidate.GetEdifice(map)?.def.building?.isNaturalRock ?? false))
+        {
+          naturalRockInRadius = true;
+          break;
+        }
+      }
+      if (!naturalRockInRadius)
+      {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  protected virtual bool DoCaveInOnCell(EffectsAtStage effects, IntVec3 cell)
+  {
+    ThingDef rockDef = ChooseRockDefForCaveIn(effects, cell);
+    if (rockDef == null)
+    {
+      return false;
+    }
+
+    if (!GenSpawn.TrySpawn(rockDef, cell, map, out Thing _, WipeMode.Vanish, canWipeEdifices: true))
+    {
+      return false;
+    }
+
+    effects.caveInConfig.caveInEffecter?.SpawnMaintained(cell, map);
+    effects.caveInConfig.caveInSound?.PlayOneShot(SoundInfo.InMap(new TargetInfo(cell, map)));
+
+    return true;
+  }
+
+  protected virtual ThingDef ChooseRockDefForCaveIn(EffectsAtStage effects, IntVec3 cell)
+  {
+    EffectsAtStage.CaveInConfig config = effects.caveInConfig;
+
+    float naturalWeight = config.naturalRockWeight;
+    float additionalWeight = config.additionalRockTypes.NullOrEmpty() ? 0f : config.additionalRockTypes.Sum(option => option.weight);
+
+    if (naturalWeight + additionalWeight <= 0f)
+    {
+      return null;
+    }
+
+    if (additionalWeight <= 0f || Rand.Range(0f, naturalWeight + additionalWeight) < naturalWeight)
+    {
+      return NaturalRockDefNear(cell);
+    }
+    return config.additionalRockTypes.RandomElementByWeight(option => option.weight).thingDef;
+  }
+
+  //get coherent formations as opposed to random confetti
+  protected virtual ThingDef NaturalRockDefNear(IntVec3 cell)
+  {
+    //random start to have variety
+    int offset = Rand.Range(0, GenAdj.AdjacentCells.Length);
+    for (int i = 0; i < GenAdj.AdjacentCells.Length; i++)
+    {
+      IntVec3 neighbour = cell + GenAdj.AdjacentCells[(i + offset) % GenAdj.AdjacentCells.Length];
+      if (!neighbour.InBounds(map))
+      {
+        continue;
+      }
+
+      Building edifice = neighbour.GetEdifice(map);
+      if (edifice != null && edifice.def.building != null && edifice.def.building.isNaturalRock && !edifice.def.IsSmoothed)
+      {
+        return edifice.def;
+      }
+    }
+
+    return CaveInfo.rockDefs.NullOrEmpty() ? null : CaveInfo.rockDefs.RandomElement();
+  }
+
   protected virtual void DoEffects()
   {
     if (!TryGetCurrentStage(out EffectsAtStage effect))
@@ -244,7 +429,7 @@ public class CompCollapseCaveTimer : CustomMapComponent
         continue;
       }
 
-      if (TryGetRandomCell(out IntVec3 targetCell))
+      if (!TryGetRandomCell(out IntVec3 targetCell))
       {
         continue;
       }
@@ -299,7 +484,7 @@ public class CompCollapseCaveTimer : CustomMapComponent
       }
     }
     effect.notificationOnStageExit?.Send(new LookTargets(map.Center, map));
-    TicksPerUpdate = Props.TicksPerUpdate;
+    TicksPerUpdate = -1;
   }
 
   protected virtual void ApplyNewStageEffects(EffectsAtStage effect)
@@ -317,7 +502,6 @@ public class CompCollapseCaveTimer : CustomMapComponent
       }
     }
     effect.notificationOnStageEntry?.Send(new LookTargets(map.Center, map));
-    TicksPerUpdate = effect.TicksPerUpdateOverride ?? Props.TicksPerUpdate;
   }
 
   protected virtual void CollapseIfShould()

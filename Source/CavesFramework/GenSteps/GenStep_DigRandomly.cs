@@ -14,10 +14,7 @@ public class GenStep_DigRandomly : GenStep
     MapGenFloatGrid caves = MapGenerator.Caves;
     foreach (IntVec3 allcell in map.AllCells)
     {
-      if (Rand.Chance(fillPercentageInstance))
-      {
-        caves[allcell] = CaveGridUtility.emptySpace;
-      }
+      caves[allcell] = Rand.Chance(fillPercentageInstance) ? CaveGridUtility.emptySpace : CaveGridUtility.rock;
     }
   }
 }

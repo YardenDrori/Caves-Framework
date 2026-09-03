@@ -118,7 +118,7 @@ public static class CaveMapUtility
 
     if (biomeDef.HasModExtension<CaveEffects>())
     {
-      compsToAdd.Add(typeof(CaveEffectsHandler));
+      compsToAdd.Add(typeof(CaveEffectsManager));
     }
     if (caveDef.collapseTimerProps != null)
     {

@@ -5,7 +5,7 @@ using Verse;
 
 namespace CavesFramework;
 
-public class CaveEffectsHandler : CustomMapComponent
+public class CaveEffectsManager : CustomMapComponent
 {
   protected List<EffecterSpawnerConfig> effectors = new();
   protected const string RandCellsCacheKey = "NonFullCell";
@@ -64,6 +64,6 @@ public class CaveEffectsHandler : CustomMapComponent
     return Rand.MTBEventOccurs(effect.EffectiveMtbHours(cellCount), GenDate.TicksPerHour, TicksPerSpawnAttempt);
   }
 
-  public CaveEffectsHandler(Map map)
+  public CaveEffectsManager(Map map)
     : base(map) { }
 }

@@ -11,7 +11,10 @@
     <defName>CFTest_DigRandomly</defName>
     <order>40</order>
     <genStep Class="CavesFramework.GenStep_DigRandomly">
-      <digPercentage>0.52~0.56</digPercentage>
+      <!-- was 0.52~0.56 - that open-seed % with the 4-5 rule below is a known
+           combination for converging to one dominant cavern + edge debris.
+           Nudged down as a first experiment toward more winding structure. -->
+      <digPercentage>0.44~0.47</digPercentage>
     </genStep>
   </GenStepDef>
 
@@ -69,6 +72,12 @@
         <li>Slate</li>
         <li>Marble</li>
       </rockDefsForCave>
+      <!-- vanilla's GenStep_RocksFromGrid.Generate() runs its own nested
+           GenStep_ScatterLumpsMineable pass unconditionally (defaults to
+           GetResourceBlotchesPer10KCellsForMap if this is unset - the same
+           field Underground_RocksFromGrid sets to 10 in Core's own def).
+           Zeroed here so CFTest_ScatterOreCavern is the only ore layer. -->
+      <overrideBlotchesPer10kCells>0</overrideBlotchesPer10kCells>
     </genStep>
   </GenStepDef>
 
@@ -103,11 +112,14 @@
       <mustBeExposedToAir>true</mustBeExposedToAir>
       <minSpacingBetweenVeins>4</minSpacingBetweenVeins>
       <veinSizeMultiplier>1.0~1.6</veinSizeMultiplier>
+      <!-- cranked way up from 0.02/0.01 purely to make the exit-distance
+           scaling visually unmistakable for testing - dial back once
+           confirmed working. -->
       <commonalityRatePerCellFromExit>
-        <rate>0.02</rate>
+        <rate>0.1</rate>
       </commonalityRatePerCellFromExit>
       <veinSizeMultPerCellFromExit>
-        <rate>0.01</rate>
+        <rate>0.08</rate>
       </veinSizeMultPerCellFromExit>
       <oreWhitelist>
         <li><oreDef>MineableSteel</oreDef></li>

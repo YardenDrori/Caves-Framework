@@ -17,7 +17,8 @@
     </statBases>
     <portal Class="CavesFramework.CavePortalProperties">
       <cave>CF_Cave_Test</cave>
-      <exitDef>CF_CaveExit</exitDef>
+      <!-- was CF_CaveExit, which doesn't exist (Building_CaveExit.xml.bak is disabled) -->
+      <exitDef>CaveExit</exitDef>
     </portal>
   </ThingDef>
 

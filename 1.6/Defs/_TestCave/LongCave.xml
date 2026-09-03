@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- TEST CONTENT ONLY. Delete the whole _TestCave folder to remove it.
+
+     Two things being smoke-tested here, deliberately in one entrance:
+
+     1. Long Cave's shape: does the existing Average-Cave genStep pipeline
+        (unchanged, same GenStepDefs from GenSteps.xml) still read as a cave
+        and not as garbage at a 50x300 aspect ratio, or does it need its own
+        carving approach / an unsmoothing pass / roof-support handling?
+
+     2. CollapseCaveTimer end to end: two stages (telegraph -> danger), ambiance
+        sound/vfx, screen shake, rockfalls, and the final collapse letter/sound/
+        effecter/pawn-crush. Never wired up or run once before this.
+
+     daysToCollapse is set way below any real value on purpose so a full
+     collapse is observable in a few minutes instead of days. -->
+<Defs>
+
+  <!-- Same genStep pipeline as CFTest_Shape_Cavern (see GenSteps.xml), just
+       stretched to a corridor aspect ratio. No new genStep code involved. -->
+  <CavesFramework.CaveShapeDef>
+    <defName>CFTest_Shape_LongCave</defName>
+    <label>test long cave</label>
+    <width>50</width>
+    <height>300</height>
+    <!-- false: keep it a fixed 50x300 so the shape is easy to eyeball consistently
+         across regenerates, rather than flipping orientation each time. -->
+    <randomizeHeightAndWidth>false</randomizeHeightAndWidth>
+    <genSteps>
+      <li>ElevationFertility</li>
+      <li>CFTest_DigRandomly</li>
+      <li>CFTest_SetMapEdgesToRock</li>
+      <li>CFTest_CellularAutomata</li>
+      <li>CFTest_CloseIsolatedPockets</li>
+      <li>CFTest_EnsureCavernRegionsConnection</li>
+      <li>CFTest_CaveRocksFromGrid</li>
+      <li>CFTest_CaveTerrain</li>
+      <li>CFTest_CaveExit</li>
+      <li>CFTest_ScatterOreCavern</li>
+      <li>RockChunks</li>
+      <li>Fog</li>
+    </genSteps>
+  </CavesFramework.CaveShapeDef>
+
+  <CavesFramework.CaveDef>
+    <defName>CF_Cave_TestLong</defName>
+    <label>test long cavern</label>
+    <description>A test long cavern used for framework development.</description>
+    <shapes>
+      <li>
+        <shape>CFTest_Shape_LongCave</shape>
+        <shapeWeight>1</shapeWeight>
+      </li>
+    </shapes>
+    <biomes>
+      <li>
+        <!-- reusing the same test biome defined in Cave.xml -->
+        <biome>CFTest_Biome_Cavern</biome>
+        <biomeWeight>1</biomeWeight>
+      </li>
+    </biomes>
+
+    <collapseTimerProps>
+      <!-- ~3.6 in-game hours total. Real caves will use daysToCollapse in the
+           1-several range; this is compressed purely so a full run (both
+           stages + the final collapse) fits in a short dev-mode sit. -->
+      <daysToCollapse>10~10</daysToCollapse>
+
+      <soundDefOnCollapse>Roof_Collapse</soundDefOnCollapse>
+      <caveEntranceEffecterDefOnCollapse>RaisedRock_Collapse</caveEntranceEffecterDefOnCollapse>
+
+      <letterOrMessageOnCollapse>
+        <noCasualties>
+          <letterDef>NegativeEvent</letterDef>
+          <letterLabel>Cave collapsed</letterLabel>
+          <letterDesc>The test cavern has caved in and sealed shut. Everyone made it out.</letterDesc>
+        </noCasualties>
+        <withCasualties>
+          <letterDef>ThreatBig</letterDef>
+          <letterLabel>Cave collapsed</letterLabel>
+          <letterDesc>The test cavern has caved in, crushing everyone still inside: </letterDesc>
+        </withCasualties>
+      </letterOrMessageOnCollapse>
+
+      <effectsAtStages>
+        <!-- Stage 1, 0-60%: telegraph only. No rockfalls yet, just the early
+             rumble/dust the spec calls for. -->
+        <li>
+          <startAtCollapsePercentage>0</startAtCollapsePercentage>
+          <endAtCollapsePercentage>0.1</endAtCollapsePercentage>
+
+          <!-- rockfalls are on by default (see CaveInConfig) - explicitly off here -->
+          <caveInConfig IsNull="True"/>
+
+          <soundsConfigs>
+            <li>
+              <!-- Anomaly's Undercave/PitGate collapsing-cave ambience, stage 1 of 2.
+                   Picked because it actually has an onCamera subSound - Tunnel doesn't,
+                   so SoundInfo.OnCamera() couldn't find anything to play for it.
+                   No start/stop mtb = plays constantly for the whole stage. -->
+              <soundDef>UndercaveCollapsingStage1</soundDef>
+            </li>
+          </soundsConfigs>
+          <effectsConfigs>
+            <li>
+              <effecter>ImpactSmallDustCloud</effecter>
+              <spawnsPerHourPer10kEmptyCells>6</spawnsPerHourPer10kEmptyCells>
+            </li>
+          </effectsConfigs>
+        </li>
+
+        <!-- Stage 2, 60-100%: danger. Rockfalls, camera shake, periodic tremors,
+             one warning message on entry. -->
+        <li>
+          <startAtCollapsePercentage>0.1</startAtCollapsePercentage>
+          <endAtCollapsePercentage>1</endAtCollapsePercentage>
+
+          <caveInConfig>
+            <mtbHoursPerTrigger>0.01</mtbHoursPerTrigger>
+            <countPerTrigger>8~10</countPerTrigger>
+            <caveInEffecter>RaisedRock_Collapse</caveInEffecter>
+            <caveInSound>Roof_Collapse</caveInSound>
+          </caveInConfig>
+
+          <screenShakeConfig>
+            <mtbHoursPerShake>0.2</mtbHoursPerShake>
+            <shakeAmount>0.08</shakeAmount>
+            <shakeDurationTicks>90</shakeDurationTicks>
+          </screenShakeConfig>
+
+          <soundsConfigs>
+            <li>
+              <!-- same Undercave ambience, stage 2 - heavier loop for the danger phase -->
+              <soundDef>UndercaveCollapsingStage2</soundDef>
+            </li>
+            <li>
+              <!-- Undercave's own periodic rumble oneshot, also onCamera=true.
+                   Emergence_Quake has no onCamera subSound at all, hence the warning. -->
+              <soundDef>UndercaveRumble</soundDef>
+              <mtbHoursPerPlay>0.15</mtbHoursPerPlay>
+            </li>
+          </soundsConfigs>
+
+          <notificationOnStageEntry>
+            <messageTypeDef>ThreatBig</messageTypeDef>
+            <messageToast>The tunnels are giving way. Get out before the cave collapses!</messageToast>
+          </notificationOnStageEntry>
+        </li>
+      </effectsAtStages>
+    </collapseTimerProps>
+  </CavesFramework.CaveDef>
+
+  <!-- Buildable from Architect > Misc for 1 steel, same as CFTest_CaveEntrance. -->
+  <ThingDef ParentName="CF_CaveEntranceBase">
+    <defName>CFTest_CaveEntrance_Long</defName>
+    <label>test long cave entrance</label>
+    <description>A hole in the ground leading to a test long cavern, with a live collapse timer. Development content.</description>
+    <designationCategory>Misc</designationCategory>
+    <costList>
+      <Steel>1</Steel>
+    </costList>
+    <statBases>
+      <WorkToBuild>1</WorkToBuild>
+    </statBases>
+    <portal Class="CavesFramework.CavePortalProperties">
+      <cave>CF_Cave_TestLong</cave>
+      <exitDef>CaveExit</exitDef>
+    </portal>
+  </ThingDef>
+
+</Defs>
